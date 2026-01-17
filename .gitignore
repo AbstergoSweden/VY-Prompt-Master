@@ -1,3 +1,13 @@
+# ---- Node.js ----
+node_modules/
+dist/
+*.tsbuildinfo
+.npm
+.eslintcache
+.env
+.env.local
+.env.*.local
+
 # ---- Archives ----
 # It's better to unpack these files and commit the raw source because
 # git has its own built in compression methods.
