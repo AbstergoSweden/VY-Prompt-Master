@@ -1,0 +1,131 @@
+---
+author: Faye Håkansdotter
+date: 2026.01.14
+contact_1: https://github.com/Fayeblade1488
+contact_2: https://github.com/AbstergoSweden
+
+identity: "VY_Senior_Automation_Specialist"
+
+purpose: "Orchestrate a high-fidelity cleanup, quality assurance, and formatting standardization workflow for a mixed-content directory containing 29 miscellaneous documents."
+
+context:
+  platform: "macOS"
+  access_method: "local_agent"
+  auth_state: "authenticated_user"
+  environment: "Finder / File System"
+  target_directory: "file:///Users/super_user/Desktop/Snippets/"
+
+inputs:
+  - name: "target_path"
+    required: true
+    value: "/Users/super_user/Desktop/Snippets/"
+    description: "Absolute path to the target directory containing snippets."
+  - name: "file_count"
+    required: true
+    value: 29
+    description: "Expected number of files to process."
+
+task:
+  goal: "Analyze, validate, and standardize 29 documents/scripts within the Snippets folder, ensuring code quality for scripts and formatting consistency for text."
+  steps:
+    - step_id: "step_001_safety_backup"
+      intent: "Create a full backup of the target directory before modification to ensure reversibility."
+      locate: "Folder 'Snippets' at /Users/super_user/Desktop/"
+      confirm_target: "Verify folder exists and contains approximately 29 items."
+      act: "Duplicate 'Snippets' folder to 'Snippets_Backup_YYYYMMDD'."
+      verify_outcome: "Backup folder exists and has same item count as source."
+      fallback_paths:
+        - "Create 'Snippets_Backup' directory and copy files individually."
+      safety_gate: "irreversible_requires_confirmation"
+
+    - step_id: "step_002_inventory_and_planning"
+      intent: "Catalog all files to populate the internal execution plan."
+      locate: "Target directory contents."
+      confirm_target: "List of files matches expectation (approx 29)."
+      act: "List all files in target path. Create memory file 'TODO.md' with a checkbox item for each filename."
+      verify_outcome: "'TODO.md' exists in memory containing 29 unchecked items."
+      fallback_paths:
+        - "Read directory listing to memory, then parse into TODO format."
+      safety_gate: "safe"
+
+    - step_id: "step_003_iterative_processing"
+      intent: "Process each file: Identify Type -> Analyze Quality -> Fix/Format -> Save."
+      locate: "Next unchecked item in 'TODO.md'."
+      confirm_target: "File exists at path."
+      act: |
+        Loop through TODO list:
+        1. Read file content.
+        2. Identify file type (Python, JS, Markdown, Plaintext, etc.).
+        3. IF CODE: Check for syntax errors, missing comments, and poor naming. Refactor for readability.
+        4. IF TEXT: Check for formatting consistency, spelling, and structure. Apply markdown formatting if applicable.
+        5. Overwrite file with improved content (or create new version if heavily modified).
+        6. Mark item checked in 'TODO.md'.
+      verify_outcome: "File timestamp updated; content length/structure improved; TODO item marked complete."
+      fallback_paths:
+        - "Skip file if unreadable/binary and log to 'skipped_files.md'."
+      safety_gate: "caution"
+
+    - step_id: "step_004_organization_consolidation"
+      intent: "Organize files into subfolders by type if the root folder is cluttered."
+      locate: "Snippets folder root."
+      confirm_target: "Mixed file types present."
+      act: "Create subfolders (e.g., 'Scripts', 'Notes', 'Misc') and move processed files into appropriate categories."
+      verify_outcome: "Files moved to valid subdirectories; root folder clean."
+      fallback_paths:
+        - "Leave files in root but prefix names (e.g., 'script_name.py')."
+      safety_gate: "safe"
+
+    - step_id: "step_005_final_report"
+      intent: "Generate a summary of actions taken and files modified."
+      locate: "Memory logs."
+      confirm_target: "Processing complete."
+      act: "Create 'Cleanup_Report.md' listing all files processed, actions taken (e.g., 'Fixed syntax', 'Reformatted'), and location of backup."
+      verify_outcome: "Report file exists and is readable."
+      fallback_paths:
+        - "Output summary to chat conversation."
+      safety_gate: "safe"
+
+constraints:
+  - "Must preserve original logic of code snippets (no functional changes without explicit user approval)."
+  - "Must create a backup before any modification."
+  - "Must handle 29 files; do not stop until all are processed or flagged as skipped."
+  - "Use 'TODO.md' for tracking progress as task exceeds 20 actions."
+
+assumptions:
+  - id: "asm_001"
+    statement: "User has write permissions to the Desktop/Snippets directory."
+    confidence: "high"
+    risk: "Permission denied errors."
+    mitigation: "Check permissions before start; ask user to sudo or chmod if needed."
+    verification_method: "Try creating a test file."
+  - id: "asm_002"
+    statement: "Files are text-readable (scripts/docs) and not binary assets (images/binaries)."
+    confidence: "medium"
+    risk: "Corrupting binary files by treating them as text."
+    mitigation: "Check file extension and header before reading/writing."
+    verification_method: "Skip if extension is .png, .jpg, .exe, .bin, etc."
+
+output_format:
+  type: "yaml"
+  structure: "VY_Task_Spec"
+  evidence_requirements: "Backup folder path, final file count, link to Cleanup_Report.md."
+
+robustness_improvements:
+  retries:
+    - condition: "File read/write lock"
+      max_attempts: 3
+      backoff: "exponential"
+  rollbacks:
+    - trigger: "Critical data loss or corruption detected during batch process."
+      procedure: "Restore from 'Snippets_Backup_YYYYMMDD' and halt."
+  monitoring:
+    - checkpoint: "step_001_safety_backup"
+      evidence: "Screenshot of backup folder."
+    - checkpoint: "step_003_iterative_processing"
+      evidence: "Log entry for each file processed."
+
+self_check:
+  - "Is the backup step mandatory and gated?"
+  - "Does the plan handle the specific count of 29 files via a tracked list?"
+  - "Are file type checks included to prevent corrupting binaries?"
+  - "Is the output purely YAML?"
