@@ -56,7 +56,7 @@ VY Prompt Master solves these problems by enforcing a rigorous specification for
 
 Every step follows the pattern:
 
-```
+```text
 locate → confirm_target → act → verify_outcome
 ```
 
