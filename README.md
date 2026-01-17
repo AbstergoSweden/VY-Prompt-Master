@@ -1,7 +1,5 @@
 # Codex Review Files
 
-![6A546ECF-F04C-456B-B8DE-68772634596A_1_105_c](https://github.com/user-attachments/assets/07d33d72-449a-4a77-a975-895017b45672)
-
 ## Overview
 This folder contains a synthesized, production-ready set of documents for generating and validating VY (Vercept) automation prompt specifications. The contents are derived from the repository's existing personas, frameworks, knowledge files, and examples. Use these files to standardize prompt creation, enforce safety boundaries, and produce deterministic YAML specs.
 
