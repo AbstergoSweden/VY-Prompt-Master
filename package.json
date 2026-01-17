@@ -1,0 +1,58 @@
+{
+  "name": "vy-prompt-master",
+  "version": "1.0.0",
+  "description": "AI-powered VY prompt generation and validation framework",
+  "type": "module",
+  "main": "dist/index.js",
+  "bin": {
+    "vy-prompt": "dist/cli/index.js"
+  },
+  "scripts": {
+    "build": "tsc",
+    "dev": "tsx watch src/cli/index.ts",
+    "start": "node dist/cli/index.js",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:coverage": "vitest run --coverage",
+    "typecheck": "tsc --noEmit",
+    "lint": "eslint src tests",
+    "lint:fix": "eslint src tests --fix",
+    "preflight": "npm run build && npm run test && npm run typecheck && npm run lint",
+    "generate": "tsx src/cli/index.ts generate",
+    "validate": "tsx src/cli/index.ts validate"
+  },
+  "keywords": [
+    "vy",
+    "vercept",
+    "prompt-engineering",
+    "ui-automation",
+    "macos"
+  ],
+  "author": "Faye Håkansdotter",
+  "license": "MIT",
+  "dependencies": {
+    "@anthropic-ai/sdk": "^0.33.0",
+    "ajv": "^8.17.1",
+    "ajv-formats": "^3.0.1",
+    "chalk": "^5.3.0",
+    "commander": "^12.1.0",
+    "dotenv": "^16.4.7",
+    "openai": "^4.77.0",
+    "yaml": "^2.7.0"
+  },
+  "devDependencies": {
+    "@eslint/js": "^9.39.2",
+    "@types/node": "^22.10.5",
+    "@typescript-eslint/eslint-plugin": "^8.20.0",
+    "@typescript-eslint/parser": "^8.20.0",
+    "@vitest/coverage-v8": "^2.1.8",
+    "eslint": "^9.18.0",
+    "tsx": "^4.19.2",
+    "typescript": "^5.7.3",
+    "typescript-eslint": "^8.53.0",
+    "vitest": "^2.1.8"
+  },
+  "engines": {
+    "node": ">=20.0.0"
+  }
+}

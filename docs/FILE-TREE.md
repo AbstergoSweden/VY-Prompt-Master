@@ -20,6 +20,33 @@ VY-Prompt-Master/
 │   ├── CODEOWNERS                    # Repository ownership
 │   └── SECURITY.md                   # Security policy
 │
+├── src/                              # TypeScript orchestrator
+│   ├── types.ts                      # Shared type definitions
+│   ├── validator/                    # Validation pipeline
+│   │   ├── schema-validator.ts       # JSON Schema validation (ajv)
+│   │   ├── safety-validator.ts       # Policy router & safety gates
+│   │   ├── ui-validator.ts           # 8-field pattern validation
+│   │   └── index.ts                  # Unified validation pipeline
+│   ├── generator/                    # AI prompt generation
+│   │   ├── ai-adapters/              # Provider adapters
+│   │   │   ├── base.ts               # Adapter interface
+│   │   │   ├── anthropic.ts          # Claude adapter
+│   │   │   ├── openai.ts             # GPT adapter
+│   │   │   └── index.ts              # Factory function
+│   │   ├── prompt-generator.ts       # Generation logic
+│   │   └── index.ts
+│   ├── orchestrator/                 # 5-phase workflow
+│   │   └── index.ts                  # Main pipeline
+│   ├── cli/                          # Command-line interface
+│   │   └── index.ts                  # CLI commands
+│   └── index.ts                      # Main entry point
+│
+├── tests/                            # Vitest test suite
+│   ├── validator/                    # Validator tests
+│   ├── generator/                    # Generator tests
+│   ├── orchestrator/                 # Orchestrator tests
+│   └── fixtures/                     # Test fixtures
+│
 ├── framework/                        # Core framework specifications
 │   ├── VY-Unified-Framework-v3.yaml  # Main framework spec (v3.0)
 │   ├── VY-Meta-Prompt.yaml           # Meta-prompt definition (v2.0)
@@ -31,17 +58,8 @@ VY-Prompt-Master/
 │
 ├── examples/                         # Example files
 │   ├── tasks/                        # Task input examples
-│   │   ├── vy_task1.yaml             # Basic task spec
-│   │   └── vy_task2.yaml             # Complex task spec
 │   ├── prompts/                      # Generated prompt examples
-│   │   ├── test_promptV1.yaml        # Test prompt v1
-│   │   ├── test_promptV2.yaml        # Test prompt v2
-│   │   ├── test_promptV3.yaml        # Test prompt v3
-│   │   └── ClaudesPromptToVY.yaml    # Cross-model example
 │   └── responses/                    # AI-generated outputs
-│       ├── Response1.yml             # Response sample 1
-│       ├── Response2.yml             # Response sample 2
-│       └── Response3.yml             # Response sample 3
 │
 ├── knowledge/                        # VY knowledge base
 │   ├── architecture.md               # Core architecture & AI foundation
@@ -65,6 +83,14 @@ VY-Prompt-Master/
 ├── archive/                          # Archived files
 │   └── legacy/                       # Legacy/backup files
 │
+├── dist/                             # TypeScript build output
+├── node_modules/                     # Dependencies
+│
+├── package.json                      # Node.js configuration
+├── tsconfig.json                     # TypeScript configuration
+├── vitest.config.ts                  # Test configuration
+├── eslint.config.mjs                 # ESLint configuration
+├── .env.example                      # Environment variable template
 ├── LICENSE                           # MIT License
 ├── README.md                         # Main project readme
 ├── GEMINI.md                         # Gemini CLI instructions

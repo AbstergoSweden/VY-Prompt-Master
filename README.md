@@ -14,6 +14,7 @@
 
 - [Overview](#overview)
 - [Quick Start](#quick-start)
+- [CLI Tools](#cli-tools)
 - [Project Structure](#project-structure)
 - [Documentation](#documentation)
 - [Usage](#usage)
@@ -63,10 +64,48 @@ The AI generates a complete YAML spec with:
 - Steps with 8 required fields each
 - Safety gates and fallback paths
 
-### 4. Validate (Optional)
+### 4. Validate with CLI
 
 ```bash
-npx ajv validate -s framework/vy-prompt-schema.json -d my-prompt.yaml
+npm install
+npm run validate your-prompt.yaml
+```
+
+---
+
+## CLI Tools
+
+The VY Orchestrator provides a TypeScript-based CLI for AI-powered prompt generation and validation.
+
+### Installation
+
+```bash
+npm install
+cp .env.example .env
+# Add your API key: ANTHROPIC_API_KEY or OPENAI_API_KEY
+```
+
+### Commands
+
+| Command | Description |
+|---------|-------------|
+| `npm run generate "task"` | Generate a VY prompt using AI |
+| `npm run validate file.yaml` | Validate YAML against schema + safety rules |
+| `npx tsx src/cli/index.ts check file.yaml` | Quick structure check |
+
+### Generate Example
+
+```bash
+export ANTHROPIC_API_KEY=your-key
+npm run generate "Clear Safari cookies and website data"
+```
+
+### Development
+
+```bash
+npm run preflight   # Build, test, typecheck, lint
+npm run test        # Run tests only
+npm run build       # TypeScript compilation
 ```
 
 ---
@@ -75,14 +114,17 @@ npx ajv validate -s framework/vy-prompt-schema.json -d my-prompt.yaml
 
 ```
 VY-Prompt-Master/
+├── src/                # TypeScript orchestrator
+│   ├── validator/      # Schema, safety, UI validators
+│   ├── generator/      # AI adapters (Claude, OpenAI)
+│   ├── orchestrator/   # 5-phase workflow pipeline
+│   └── cli/            # Command-line interface
+├── tests/              # Vitest test suite
 ├── framework/          # Core specifications
 │   ├── VY-Unified-Framework-v3.yaml
 │   ├── VY-Meta-Prompt.yaml
 │   └── vy-prompt-schema.json
 ├── examples/           # Sample prompts and tasks
-│   ├── tasks/
-│   ├── prompts/
-│   └── responses/
 ├── knowledge/          # VY capability documentation
 ├── docs/               # Guides and references
 ├── legal/              # Legal documents
@@ -137,16 +179,20 @@ self_check: [ "..." ]
 
 ## Validation
 
-### Validate YAML Syntax
+### CLI Validation (Recommended)
 
 ```bash
-npx yaml-lint framework/*.yaml
+# Full validation (schema + safety + UI patterns)
+npm run validate examples/prompts/test_promptV3.yaml
+
+# Quick structure check
+npx tsx src/cli/index.ts check examples/prompts/test_promptV3.yaml
 ```
 
-### Validate Against Schema
+### Manual Schema Validation
 
 ```bash
-npx ajv validate -s framework/vy-prompt-schema.json -d examples/prompts/test_promptV3.yaml
+npx ajv validate -s framework/vy-prompt-schema.json -d my-prompt.yaml
 ```
 
 ### Quality Checklist
@@ -155,7 +201,7 @@ npx ajv validate -s framework/vy-prompt-schema.json -d examples/prompts/test_pro
 - [ ] Every step has 8 required fields
 - [ ] Safety gates appropriate for actions
 - [ ] No credentials in specifications
-- [ ] Fallback paths for critical steps
+- [ ] Command key (⌘) used, not Control
 
 ---
 
