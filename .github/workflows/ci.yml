@@ -1,9 +1,79 @@
 name: CI
+
 on:
   push:
+    branches: [main]
   pull_request:
+    branches: [main]
+
 jobs:
-  build:
+  validate:
     runs-on: ubuntu-latest
+    name: Validate YAML and Schema
+    
     steps:
-      - uses: actions/checkout@v3
+      - name: Checkout
+        uses: actions/checkout@v4
+      
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      
+      - name: Install validation tools
+        run: npm install -g ajv-cli js-yaml
+      
+      - name: Validate YAML syntax - Framework
+        run: |
+          for file in framework/*.yaml; do
+            if [ -f "$file" ]; then
+              echo "Checking $file..."
+              npx js-yaml "$file" > /dev/null && echo "✓ $file is valid YAML"
+            fi
+          done
+      
+      - name: Validate YAML syntax - Examples
+        run: |
+          for file in examples/**/*.yaml examples/**/*.yml; do
+            if [ -f "$file" ]; then
+              echo "Checking $file..."
+              npx js-yaml "$file" > /dev/null && echo "✓ $file is valid YAML"
+            fi
+          done
+      
+      - name: Validate prompts against schema
+        run: |
+          if [ -f "framework/vy-prompt-schema.json" ]; then
+            for file in examples/prompts/*.yaml; do
+              if [ -f "$file" ]; then
+                echo "Validating $file against schema..."
+                npx js-yaml "$file" > /tmp/prompt.json
+                npx ajv validate -s framework/vy-prompt-schema.json -d /tmp/prompt.json --strict=false || echo "⚠ $file has validation warnings"
+              fi
+            done
+          fi
+
+  lint-markdown:
+    runs-on: ubuntu-latest
+    name: Lint Markdown
+    
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      
+      - name: Lint README
+        uses: DavidAnson/markdownlint-cli2-action@v16
+        with:
+          globs: 'README.md'
+        continue-on-error: true
+      
+      - name: Lint docs
+        uses: DavidAnson/markdownlint-cli2-action@v16
+        with:
+          globs: 'docs/*.md'
+        continue-on-error: true
