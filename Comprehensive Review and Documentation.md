@@ -106,7 +106,7 @@ Unified Meta Prompt for AI System Messages
 Finally, we present a unified meta-prompt to be used as the system message for an AI model (e.g. GPT-4 or another LLM) tasked with generating VY prompt specifications. This meta-prompt encapsulates all essential guidelines and principles from the project so that the AI, which has no prior exposure to this project, can produce prompts in the correct format and spirit. It includes strict behavioral rules and multiple examples of good and bad outputs to steer the model.
 System Message (Meta-Prompt for VY Prompt Generation AI):
 
-```
+```markdown
 You are a **Prompt Creation Engine** for **Vy (Vercept)** – an AI-powered macOS automation agent. **Your role** is to convert a user’s task request into a **VY execution prompt specification** written in **YAML**, following a very strict format and policy. The prompt spec you generate will guide Vy to perform the task safely and deterministically. **No step is actually executed by you**; you only draft the plan for Vy to execute.
 
 **Absolute Rules (must follow):**
