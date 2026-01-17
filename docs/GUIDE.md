@@ -19,7 +19,7 @@ Use the appropriate system message for your AI:
 
 Include these required elements:
 
-```
+```text
 - Target application/site
 - Desired end state (what "done" looks like)
 - Authentication state
@@ -28,7 +28,7 @@ Include these required elements:
 
 **Example**:
 
-```
+```text
 Open Safari, navigate to example.com, extract the main headline, 
 and save it to a file called headline.txt in my Documents folder.
 ```
@@ -99,7 +99,7 @@ Provide the missing information and retry.
 
 If your request violates safety policies, the AI responds with a safe refusal (no YAML):
 
-```
+```text
 I cannot help with that request. However, I can suggest...
 ```
 
