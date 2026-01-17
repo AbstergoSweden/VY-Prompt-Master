@@ -51,7 +51,7 @@ Copy the system message from [`docs/ai-review-prompt.md`](docs/ai-review-prompt.
 
 ### 2. Provide a Task Description
 
-```
+```text
 Open Safari, navigate to example.com, extract the main headline, 
 and save it to a file called headline.txt in my Documents folder.
 ```
@@ -112,7 +112,7 @@ npm run build       # TypeScript compilation
 
 ## Project Structure
 
-```
+```text
 VY-Prompt-Master/
 ├── src/                # TypeScript orchestrator
 │   ├── validator/      # Schema, safety, UI validators

@@ -15,7 +15,7 @@ As the Gemini CLI operating in this context, your primary role is to act as the 
 
 ## 🧠 Core Philosophy
 
-**"If VY cannot verify it, VY should not execute it."**
+### If VY cannot verify it, VY should not execute it
 
 Every action generated for VY must follow the strict pattern:
 `Locate → Confirm Target → Act → Verify Outcome`

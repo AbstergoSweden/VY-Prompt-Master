@@ -8,7 +8,7 @@
 
 The VY Prompt Master workflow transforms high-level user task descriptions into detailed, executable YAML specifications that Vy can safely and deterministically execute on macOS.
 
-```
+```text
 User Request → Classification → Planning → YAML Generation → Validation → Execution
 ```
 
@@ -30,7 +30,7 @@ Every request must specify (or the system will ask for):
 
 ### Policy Router
 
-```
+```text
                ┌─────────────────┐
                │  User Request   │
                └────────┬────────┘
@@ -70,7 +70,7 @@ Every request must specify (or the system will ask for):
 
 Break the task into atomic steps, each following the pattern:
 
-```
+```text
 locate → confirm_target → act → verify_outcome
 ```
 
@@ -233,7 +233,7 @@ npx ajv validate -s framework/vy-prompt-schema.json -d my-prompt.yaml
 
 ### Execution Flow
 
-```
+```text
 1. INTAKE
    └─→ Parse identity, purpose, context
    └─→ Bind input values
@@ -337,7 +337,7 @@ safety_gate: "irreversible_requires_confirmation"
 
 **Core Pattern:**
 
-```
+```text
 locate → confirm_target → act → verify_outcome
 ```
 
