@@ -39,6 +39,6 @@ Add any other context about the problem here.
 
 If reporting a schema validation issue, include the output:
 
-```
+```text
 [paste validation output here]
 ```
