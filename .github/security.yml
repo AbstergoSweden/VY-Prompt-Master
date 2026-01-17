@@ -1,0 +1,5 @@
+contact: security@example.com
+preferred_languages:
+  - en
+policy: |
+  This repository follows best practices for security. Please report vulnerabilities via issues.
