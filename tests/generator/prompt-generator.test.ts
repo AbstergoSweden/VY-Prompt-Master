@@ -6,17 +6,18 @@ import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { generatePrompt, extractYaml } from '../../src/generator/prompt-generator.js';
 import type { AIAdapter, AIResponse } from '../../src/generator/ai-adapters/base.js';
 
-// Mock fs for meta-prompt loading
+// Mock fs for framework loading
 vi.mock('fs', async (importOriginal) => {
     const actual = await importOriginal<typeof import('fs')>();
     return {
         ...actual,
         readFileSync: vi.fn((path: string) => {
-            if (path.includes('VY-Meta-Prompt.yaml')) {
+            if (path.includes('VY-Unified-Framework-v3.yaml')) {
                 return `
-identity: VY Prompt Engineering Persona
-purpose: Generate VY prompts
+identity: VY Prompt Engineering Framework
+purpose: Generate safe, deterministic VY prompts
 version: '3.0'
+core_philosophy: 'If VY cannot verify it, VY should not execute it'
 `;
             }
             return actual.readFileSync(path, 'utf-8');

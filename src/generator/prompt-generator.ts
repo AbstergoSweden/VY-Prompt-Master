@@ -1,6 +1,7 @@
 /**
  * VY Prompt Master - Prompt Generator
- * Uses VY-Meta-Prompt.yaml as system prompt template to generate VY prompts
+ * Uses VY-Unified-Framework-v3.yaml as the authoritative system prompt template
+ * to generate safe, deterministic VY automation prompts.
  */
 
 import { readFileSync } from 'fs';
@@ -11,39 +12,43 @@ import type { AIAdapter, AIMessage } from './ai-adapters/index.js';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 
-/** Loads the VY Meta-Prompt template */
-function loadMetaPrompt(): string {
-    const metaPromptPath = join(__dirname, '../../framework/VY-Meta-Prompt.yaml');
-    return readFileSync(metaPromptPath, 'utf-8');
+/** Loads the VY Unified Framework v3 (authoritative single source of truth) */
+function loadFramework(): string {
+    const frameworkPath = join(__dirname, '../../framework/VY-Unified-Framework-v3.yaml');
+    return readFileSync(frameworkPath, 'utf-8');
 }
 
-/** Builds the system prompt from the meta-prompt template */
+/** Builds the system prompt from the unified framework */
 function buildSystemPrompt(): string {
-    const metaPrompt = loadMetaPrompt();
+    const framework = loadFramework();
 
-    return `You are the VY Prompt Engineering Persona. Your role is to generate safe, deterministic, and robust UI automation prompts for VY (Vercept) agent on macOS.
+    return `You are the VY Prompt Engineering Agent. Your role is to generate safe, deterministic, and robust UI automation prompts for VY (Vercept) agent on macOS.
 
-## Core Framework
-${metaPrompt}
+## Authoritative Framework (Single Source of Truth)
+${framework}
 
-## Output Requirements
+## Critical Output Requirements
 
-1. Output ONLY valid YAML - no markdown code fences, no explanatory text, no preamble
-2. Every step MUST follow the pattern: locate → confirm_target → act → verify_outcome
-3. Every step MUST have all 8 required fields:
+1. **Pure YAML Only** - No markdown code fences, no explanatory text, no preamble, no commentary
+2. **8-Field Pattern** - Every step MUST have all 8 required fields:
    - step_id (format: step_NNN_descriptive_name)
-   - intent
-   - locate
-   - confirm_target
-   - act
-   - verify_outcome
-   - fallback_paths (array)
+   - intent (single sentence purpose)
+   - locate (unambiguous UI element description)
+   - confirm_target (observable criteria BEFORE acting)
+   - act (specific action with exact parameters)
+   - verify_outcome (observable evidence AFTER acting)
+   - fallback_paths (array of alternatives)
    - safety_gate (safe | caution | checkpoint | irreversible_requires_confirmation)
-4. Use macOS conventions: Command (⌘) not Control, use open_application tool
-5. Irreversible actions MUST have safety_gate: irreversible_requires_confirmation
-6. Never automate credential entry - request manual user login
 
-If the request is ambiguous or missing required information, output ONLY an inputs_missing YAML section and nothing else.`;
+3. **UI Pattern** - Every action follows: locate → confirm_target → act → verify_outcome
+4. **macOS Conventions** - Use Command (⌘) not Control, use open_application tool
+5. **Safety Gates** - Irreversible actions MUST have safety_gate: irreversible_requires_confirmation
+6. **No Credential Automation** - Never automate credential entry; request manual user login
+7. **Policy Router First** - ALWAYS classify requests before generating specification
+
+If the request is ambiguous or missing required information, output ONLY an inputs_missing YAML section listing what's needed.
+
+Remember: "If VY cannot verify it, VY should not execute it."`;
 }
 
 /** Options for prompt generation */
