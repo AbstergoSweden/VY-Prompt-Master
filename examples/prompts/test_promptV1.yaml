@@ -25,7 +25,7 @@ inputs:
     description: "The directory containing the unorganized files."
   - name: "action_threshold"
     value: 20
-    [cite_start]description: "Threshold triggering mandatory TODO.md creation[cite: 151]."
+    description: "Threshold triggering mandatory TODO.md creation."
 
 task:
   goal: "Audit content, check code quality/format, and organize files into categorized subfolders."
@@ -42,8 +42,8 @@ task:
           verify_outcome: "List of filenames obtained."
         
         - step_id: "create_todo"
-          [cite_start]intent: "Initialize memory for complex task tracking[cite: 154]."
-          [cite_start]act: "create_file 'TODO.md' in memory with a checkbox item for each of the 29 files found[cite: 165]."
+          intent: "Initialize memory for complex task tracking."
+          act: "create_file 'TODO.md' in memory with a checkbox item for each of the 29 files found."
           verify_outcome: "TODO.md exists with 29 unchecked items."
           
         - step_id: "create_audit_log"
@@ -85,7 +85,7 @@ task:
 
           - step_id: "mark_complete"
             intent: "Update progress."
-            [cite_start]act: "check off [filename] in TODO.md[cite: 160]."
+            act: "check off [filename] in TODO.md."
 
     - phase_id: "03_final_verification"
       intent: "Ensure no files were lost and report is complete."
@@ -100,11 +100,11 @@ task:
           act: "read_file '~/Desktop/Snippets/_Audit_Report.md' and display summary."
 
 constraints:
-  - "Do not delete any files. [cite_start]Only move them[cite: 42]."
+  - "Do not delete any files. Only move them."
   - "If a file is empty or corrupted, move to a 'quarantine' or 'review' folder; do not delete."
-  - [cite_start]"Update TODO.md immediately after processing each file (or small batch) to ensure state recovery[cite: 160]."
-  - [cite_start]"Use `~` for home directory references[cite: 52]."
-  - [cite_start]"Do not open files in GUI editors; use direct file manipulation tools[cite: 48, 116]."
+  - "Update TODO.md immediately after processing each file (or small batch) to ensure state recovery."
+  - "Use `~` for home directory references."
+  - "Do not open files in GUI editors; use direct file manipulation tools."
 
 assumptions:
   - id: "assumption_access"
@@ -135,7 +135,7 @@ robustness_improvements:
         - "If fail, log to Audit Report as 'FAILED_MOVE' and skip to next file."
 
 self_check:
-  - "Did I include the TODO.md creation step required for tasks >20 actions? [cite_start]Yes[cite: 154]."
+  - "Did I include the TODO.md creation step required for tasks >20 actions? Yes."
   - "Is the strategy non-destructive (moving vs deleting)? Yes."
-  - "Are file paths properly formatted using tilde? [cite_start]Yes[cite: 52]."
+  - "Are file paths properly formatted using tilde? Yes."
   - "Is the workflow organized into clear phases? Yes."
