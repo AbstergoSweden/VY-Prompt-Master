@@ -1,0 +1,375 @@
+---
+author: Faye Håkansdotter
+date: 2026.01.14
+contact_1: https://github.com/Fayeblade1488
+contact_2: https://github.com/AbstergoSweden
+
+identity: VY Prompt Engineering Persona
+purpose: >-
+  Generate highly explicit, UI-grounded, stepwise, reversible-first,
+  evidence-backed prompt specifications that enable VY to execute tasks safely,
+  deterministically, and robustly.
+context:
+  platform: VY (Vercept) automation agent on macOS
+  access_method: desktop UI automation (can include web interactions via browser)
+  auth_state: user_logged_in_as_needed
+  environment: "macOS (version unspecified), user's default browser"
+inputs:
+  - name: user_task_description
+    required: true
+    description: >-
+      High-level natural language description of the UI automation task for VY
+      to execute.
+    example: >-
+      Open Safari, navigate to vercept.com, capture the main headline, and then
+      close Safari.
+task:
+  goal: >-
+    Execute a UI automation task, ensuring explicit, UI-grounded, stepwise,
+    reversible-first, and evidence-backed actions are defined.
+  steps:
+    - step_id: step_001_launch_browser
+      intent: Launch the user's default web browser.
+      locate: >-
+        Visible 'Safari' or 'Chrome' application icon in the macOS Dock or
+        Applications folder, or the system's default browser executable.
+      confirm_target: >-
+        An active application window corresponding to the default browser
+        appears in the foreground, with its title bar visible.
+      act: >-
+        If a browser icon is present in the Dock, click the 'Safari' or 'Chrome'
+        icon. Otherwise, use the 'open_application' tool with the name of the
+        default browser (e.g., 'Safari').
+      verify_outcome: >-
+        The selected browser is the active application, and a new window or tab
+        is open.
+      fallback_paths:
+        - >-
+          If direct click fails, attempt to use the 'open_application' tool with
+          the browser's full application path or common name.
+      safety_gate: safe
+    - step_id: step_002_navigate_url
+      intent: Navigate to the specified target URL.
+      locate: >-
+        The active browser window's address bar (e.g., a text field labeled
+        'Search or enter address' or showing the current URL).
+      confirm_target: >-
+        The address bar is visibly focused and editable, or a new blank tab is
+        open with a prominent, editable address bar.
+      act: >-
+        First, erase any pre-existing text in the address bar (Knowledge 3).
+        Then, type 'https://vercept.com/' into the address bar and press the
+        Return key (Knowledge 3).
+      verify_outcome: >-
+        The browser's URL bar accurately displays 'https://vercept.com/' AND a
+        key visual element of the Vercept website (e.g., the company logo or a
+        prominent headline) is rendered on screen.
+      fallback_paths:
+        - >-
+          If the address bar is not found or typing fails, use the 'open_url'
+          tool directly with 'https://vercept.com/' (Knowledge 2).
+        - >-
+          If page load issues, wait progressively (250ms, then 500ms, then
+          1000ms) and retry navigating once (Knowledge 2, 3).
+      safety_gate: safe
+    - step_id: step_003_extract_headline
+      intent: Identify and extract the main headline from the loaded webpage.
+      locate: >-
+        A prominent text element on the webpage that appears to be the main
+        headline, characterized by large font size, central positioning, or
+        explicit semantic tagging (e.g., likely containing text like 'VY AI
+        Automation Agent' or similar).
+      confirm_target: >-
+        The identified element is visually the largest and most central text
+        block within the visible screen area, indicating it is the primary
+        headline for the page.
+      act: >-
+        Use screen vision to read and capture the visible text content of the
+        identified UI element (Conduct Deep Research, Knowledge 2).
+      verify_outcome: >-
+        The extracted text content is non-empty, formatted as a string, and its
+        length and content are consistent with a typical webpage headline.
+      fallback_paths:
+        - >-
+          If no single clear headline is found, identify the largest visible
+          text block on the page that appears to be a heading.
+        - >-
+          If text extraction fails, take a screenshot of the area and use OCR to
+          extract text (Knowledge 2).
+      safety_gate: safe
+    - step_id: step_004_report_headline
+      intent: Output the extracted headline to the user.
+      locate: >-
+        Not applicable; this is an internal process to format and present the
+        information.
+      confirm_target: Not applicable; output is generated internally.
+      act: >-
+        Format the extracted headline as a string and prepare it for final
+        output.
+      verify_outcome: >-
+        The headline string is prepared correctly, matches the extracted
+        content, and is ready for display.
+      fallback_paths: []
+      safety_gate: safe
+    - step_id: step_005_close_browser_checkpoint
+      intent: Close the browser application after completing the task.
+      locate: >-
+        The active browser window's close button (e.g., the red 'X' or '•' icon
+        in the top-left corner on macOS), or the application's 'Quit' menu item.
+      confirm_target: >-
+        The target is clearly the browser application's close button or quit
+        option, not another application.
+      act: >-
+        Click the browser window's close button, or if the window is
+        unresponsive, use the 'quit_application' tool for the browser.
+      verify_outcome: >-
+        The browser application is no longer visible in the foreground, and its
+        icon in the Dock may disappear or dim, indicating it has closed or quit.
+      fallback_paths:
+        - >-
+          If clicking the close button fails, attempt to use the
+          'quit_application' tool with the browser's name.
+      safety_gate: caution
+constraints:
+  - Minimal output outside the YAML prompt spec.
+  - Reason internally; do not print chain-of-thought.
+  - Ask clarifying questions only if blocking.
+  - >-
+    Before irreversible actions (delete/send/pay/post), require explicit user
+    confirmation.
+  - Do not claim tool access/integrations unless provided.
+  - >-
+    If citations requested, cite only user-provided sources or
+    explicitly-permitted browsing results.
+  - 'Prefer UI-grounded steps: locate → confirm → act → verify.'
+  - Use reversible actions first; create checkpoints; include rollback guidance.
+  - 'Use short, atomic steps; one intent per step.'
+assumptions:
+  - id: vy_local_agent_presence
+    statement: >-
+      VY runs as a local agent on the user's macOS computer with necessary
+      permissions to interact with the UI.
+    confidence: high
+    risk: >-
+      Agent may not be available, or its UI interactions might be blocked by
+      system security settings.
+    mitigation: >-
+      The prompt specification itself instructs VY to take UI actions; the
+      system's operational readiness is assumed.
+    verification_method: >-
+      VY's ability to successfully execute the first UI action (e.g., launching
+      an application).
+  - id: vy_ui_grounding_capability
+    statement: >-
+      VY can reliably identify and interact with on-screen UI elements (buttons,
+      text fields, links, specific text blocks) based on textual descriptions
+      and visual context (screen vision technology).
+    confidence: high
+    risk: >-
+      Steps may be non-actionable or target incorrect UI elements due to dynamic
+      UI, resolution changes, or visual ambiguities (Conduct Deep Research).
+    mitigation: >-
+      Each step includes explicit locate, confirm_target, and verify_outcome
+      directives. Fallback paths are provided for common failures. VY's adaptive
+      scrolling and error recovery mechanisms are leveraged (Knowledge 2, 3).
+    verification_method: >-
+      Observable visual changes on screen after an action, and specific data
+      extraction matching expectations.
+  - id: macOS_environment_conventions
+    statement: >-
+      The target system is macOS, and standard macOS UI conventions (e.g.,
+      Command key for shortcuts, typical window controls, file system paths)
+      apply.
+    confidence: high
+    risk: >-
+      Incorrect keyboard shortcuts or UI interaction patterns might be
+      attempted.
+    mitigation: >-
+      Specify actions using macOS-appropriate terminology and conventions. VY
+      has deep macOS platform awareness (Knowledge 1, 3).
+    verification_method: >-
+      Successful interaction with macOS-specific UI elements and consistent
+      application behavior.
+  - id: browser_default_availability
+    statement: >-
+      The user has a functional default web browser (e.g., Safari, Chrome)
+      installed and configured on macOS, and it opens consistently to display
+      web content.
+    confidence: medium
+    risk: >-
+      Web navigation steps could fail if no default browser is set, or if an
+      unusual/unsupported browser is in use.
+    mitigation: >-
+      Prioritize robust UI-grounding for browser launch and navigation
+      (Knowledge 2). Include fallbacks for direct URL opening. VY can specify a
+      browser in tool calls (Knowledge 3).
+    verification_method: Browser window appears and correctly loads the target URL.
+output_format:
+  type: yaml
+  structure: >
+    YAML dictionary with top-level keys: identity, purpose, context, inputs,
+    task, constraints, assumptions, output_format, self_check,
+    robustness_improvements, validation_tests, failure_playbooks.
+
+    The 'task' key contains a list of 'steps', each adhering to the
+    required_fields_per_step defined in the persona.
+  evidence_requirements:
+    - >-
+      For each completed step, an internal evidence_ledger must record
+      what_observed, where_observed, and why_it_matters.
+    - >-
+      Screenshots must be taken before and after critical UI state-changing
+      actions or before any user confirmation prompts to capture observable
+      evidence.
+robustness_improvements:
+  retries:
+    - condition: >-
+        UI element (as defined by 'locate') not found after the initial attempt
+        or an action produces no visible result (Knowledge 3).
+      max_attempts: 2
+      backoff: >-
+        progressive timing strategy: 250ms initial wait, then increase to 500ms
+        or 1000ms if needed (Knowledge 2, 3).
+      recovery_action: >-
+        If a UI element is not found, attempt to reposition the mouse cursor
+        over a potentially scrollable area or search region before retrying. If
+        a specific tool fails, attempt alternative tool for same intent
+        (Knowledge 3).
+    - condition: >-
+        Web page content fails to load fully or displays unexpected errors after
+        navigation.
+      max_attempts: 1
+      backoff: 5 seconds
+      recovery_action: >-
+        Refresh the page and re-verify content. If persistent, retry 'open_url'
+        tool from last known good state.
+  rollbacks:
+    - trigger: >-
+        Failure during step 'step_005_close_browser_checkpoint' or any critical
+        error that prevents graceful task completion.
+      procedure: >-
+        Attempt to close the browser (if still open) via 'quit_application'
+        tool. Report 'Task aborted; browser closed' or 'Task aborted; unexpected
+        error encountered before completion'.
+      reversibility_level: full_reversion_for_browser_state
+  monitoring:
+    - checkpoint: step_003_extract_headline
+      evidence: The successfully extracted headline text.
+      summary_point: Successfully extracted the main headline from vercept.com.
+self_check:
+  - >-
+    Verify all required_keys (identity, purpose, context, inputs, task,
+    constraints, output_format, self_check) are present in the generated YAML.
+  - >-
+    Confirm every action step (within 'task.steps') explicitly uses the locate →
+    confirm_target → act → verify_outcome pattern with observable evidence
+    specified for 'verify_outcome'.
+  - >-
+    Ensure irreversible actions (e.g., delete, send, pay, post) are explicitly
+    gated with a 'safety_gate: irreversible_requires_confirmation' and a
+    preceding user confirmation step (if applicable for a real task).
+  - >-
+    Validate that no claims of tool access/integrations are made by the persona,
+    and actions are phrased as instructions for VY to execute, not as already
+    completed actions.
+  - >-
+    Check that all UI actions are grounded in observable on-screen elements, and
+    each critical step includes at least one 'fallback_paths' entry.
+  - >-
+    Confirm all assumptions are documented within the 'assumptions' section,
+    including 'id', 'statement', 'confidence', 'risk', 'mitigation', and
+    'verification_method'.
+  - >-
+    Ensure the output is strictly valid YAML without any extraneous text,
+    preambles, commentary, quotes, or code fences.
+  - >-
+    Verify the 'robustness_improvements' section correctly incorporates retry
+    logic, rollback procedures, and monitoring checkpoints as described in the
+    Knowledge files.
+  - >-
+    Ensure 'validation_tests' and 'failure_playbooks' are included as per the
+    schema, providing comprehensive guidance for robust automation.
+validation_tests:
+  schema_tests:
+    - >-
+      All required_keys (identity, purpose, context, inputs, task, constraints,
+      output_format, self_check) are present at the top level.
+    - >-
+      No unknown top-level keys exist beyond those explicitly allowed by the
+      persona's 'optional_keys' (e.g., 'assumptions', 'robustness_improvements',
+      'validation_tests', 'failure_playbooks').
+    - >-
+      Data types for all fields (e.g., lists, scalars, booleans) match the
+      schema expectations.
+  ui_tests:
+    - >-
+      Every individual action step within 'task.steps' explicitly includes
+      'locate', 'confirm_target', and 'verify_outcome' fields.
+    - >-
+      Any step identified as potentially irreversible has a 'safety_gate' set to
+      'irreversible_requires_confirmation' (demonstrated in hypothetical use
+      cases).
+  safety_tests:
+    - >-
+      The prompt specification contains no instructions for bypass, jailbreak,
+      evasion, or circumvention of security policies.
+    - >-
+      There are no instructions facilitating credential harvesting, privacy
+      invasion, or stealth operations; instead, manual user authentication is
+      specified if login is required.
+  determinism_tests:
+    - >-
+      The persona's output consists solely of instructions/specifications for
+      VY, without any claims of having completed actions itself.
+    - >-
+      Vague verbs without clear UI referents (e.g., 'handle it', 'process it')
+      are avoided; instead, concrete, observable actions ('click', 'type',
+      'select') are used.
+failure_playbooks:
+  - name: ui_not_found
+    detection: >-
+      An element targeted by 'locate' cannot be found on the screen after the
+      initial attempt and one additional retry (Knowledge 3).
+    response:
+      - >-
+        Execute the 'fallback_paths' for the current step in the specified
+        priority order.
+      - >-
+        If all fallbacks are exhausted and the element is critical, attempt a
+        broad search within the application's menus or search functionality if
+        contextually available.
+      - >-
+        If still blocking, capture a screenshot and request one clarifying
+        screenshot/description from the user, then pause for human input.
+  - name: unexpected_modal
+    detection: >-
+      A modal window or dialog box appears and interrupts the current workflow,
+      obscuring target UI elements or demanding immediate interaction.
+    response:
+      - >-
+        Identify the modal's title and the labels of its primary/secondary
+        buttons (e.g., 'OK', 'Cancel', 'Save', 'Delete').
+      - >-
+        Prefer to click a 'Cancel' or 'Close' button unless the modal's function
+        is absolutely required for the task's progress.
+      - >-
+        If the modal contains destructive wording (e.g., 'Delete Permanently',
+        'Confirm Payment'), immediately set 'safety_gate' to
+        'irreversible_requires_confirmation' and prompt the user for explicit
+        confirmation before any action on the modal.
+  - name: auth_blocked
+    detection: >-
+      The system detects a login prompt, session expiration message, or
+      redirection to an authentication page, indicating that VY's access is
+      blocked without user credentials.
+    response:
+      - >-
+        Immediately halt current automation steps to prevent any unauthorized or
+        unintended interactions.
+      - >-
+        Inform the user that authentication is required, stating 'Authentication
+        required. Please log in manually to proceed.' (Knowledge 1, 3).
+      - >-
+        After the user confirms they have successfully logged in, resume
+        automation from the last successfully completed checkpoint to ensure
+        continuity.
