@@ -2,227 +2,227 @@
 identity: VY Prompt Engineering Persona
 purpose: Generate a UI-grounded, stepwise, reversible-first, evidence-backed prompt specification for VY to clear Safari cookies on macOS.
 context:
-	platform: VY (Vercept) automation agent on macOS
-	access_method: desktop UI automation
-	auth_state: user_logged_in
-	environment: macOS, Safari browser
+  platform: VY (Vercept) automation agent on macOS
+  access_method: desktop UI automation
+  auth_state: user_logged_in
+  environment: macOS, Safari browser
 inputs:
-	- name: user_task_description
-		required: true
-		description: Clear all cookies from Safari browser.
-		example: "Open Safari settings and clear all website cookies/data."
+  - name: user_task_description
+    required: true
+    description: Clear all cookies from Safari browser.
+    example: "Open Safari settings and clear all website cookies/data."
 task:
-	goal: Clear all cookies and website data from Safari browser via macOS UI automation.
-	steps:
-		- step_id: "step_001_launch_safari"
-			intent: "Launch Safari browser if not already running."
-			locate: "Visible 'Safari' application icon in the macOS Dock, or the Safari executable in the Applications folder."
-			confirm_target: "The Safari icon is clearly identifiable (compass-like icon) in the Dock or Applications."
-			act: "Click the 'Safari' icon in the Dock. If not present, use the 'open_application' tool with 'Safari'."
-			verify_outcome: "Safari is the active foreground application, with a browser window visible."
-			fallback_paths:
-				- "If Dock icon is not found, open Spotlight (Command+Space), type 'Safari', and press Return."
-				- "Use 'open_application' tool with application name 'Safari'."
-			safety_gate: "safe"
-			
-		- step_id: "step_002_open_safari_settings"
-			intent: "Open Safari's Settings/Preferences window."
-			locate: "The 'Safari' menu item in the macOS menu bar (top-left of the screen, next to the Apple logo)."
-			confirm_target: "The menu bar displays 'Safari' as the active application menu."
-			act: "Click the 'Safari' menu in the menu bar, then click 'Settings...' (or 'Preferences...' on older macOS versions). Alternatively, press Command+Comma (⌘,)."
-			verify_outcome: "A Safari Settings/Preferences window appears with multiple tabs (General, Tabs, AutoFill, Passwords, Search, Security, Privacy, Websites, Extensions, Advanced)."
-			fallback_paths:
-				- "If menu click fails, use keyboard shortcut Command+Comma (⌘,) to open Settings directly."
-			safety_gate: "safe"
-			
-		- step_id: "step_003_navigate_to_privacy_tab"
-			intent: "Navigate to the Privacy tab within Safari Settings."
-			locate: "The 'Privacy' tab button/icon within the Safari Settings window toolbar (typically displays a hand icon or shield)."
-			confirm_target: "The 'Privacy' tab is visible in the Settings window's tab bar, distinguishable from other tabs like 'General' or 'Security'."
-			act: "Click the 'Privacy' tab button in the Settings window toolbar."
-			verify_outcome: "The Privacy pane is now displayed, showing options including 'Website tracking', 'Hide IP address', and a 'Manage Website Data...' button."
-			fallback_paths:
-				- "If tab is not immediately visible, look for a tab labeled with a hand/shield icon or scroll horizontally in the tab bar."
-			safety_gate: "safe"
-			
-		- step_id: "step_004_open_manage_website_data"
-			intent: "Open the 'Manage Website Data' dialog to access cookie storage."
-			locate: "The 'Manage Website Data...' button within the Privacy pane of Safari Settings."
-			confirm_target: "A button explicitly labeled 'Manage Website Data...' is visible in the Privacy tab content area."
-			act: "Click the 'Manage Website Data...' button."
-			verify_outcome: "A new sheet/dialog appears listing all stored website data (cookies, cache, etc.) with 'Remove All' and 'Done' buttons visible."
-			fallback_paths:
-				- "If button is not visible, scroll down within the Privacy pane to locate it."
-				- "Wait 500ms for the Privacy tab content to fully render before retrying."
-			safety_gate: "safe"
-			
-		- step_id: "step_005_checkpoint_before_deletion"
-			intent: "Create a checkpoint and capture evidence before initiating the irreversible deletion."
-			locate: "The 'Manage Website Data' dialog showing the list of stored cookies/data and the 'Remove All' button."
-			confirm_target: "The dialog is fully loaded, displaying website entries (or 'No website data' if already cleared)."
-			act: "Take a screenshot of the current state for evidence. Count or note the approximate number of website data entries displayed."
-			verify_outcome: "Screenshot captured. Evidence ledger updated with current cookie/data state."
-			fallback_paths: []
-			safety_gate: "checkpoint"
-			
-		- step_id: "step_006_click_remove_all"
-			intent: "Initiate the removal of all website data/cookies."
-			locate: "The 'Remove All' button in the 'Manage Website Data' dialog (typically in the bottom-left area of the dialog)."
-			confirm_target: "A button explicitly labeled 'Remove All' is visible and clickable."
-			act: "Click the 'Remove All' button."
-			verify_outcome: "A confirmation dialog appears asking to confirm the removal of all website data, with options like 'Remove Now' or 'Cancel'."
-			fallback_paths:
-				- "If 'Remove All' is grayed out or not present, the cookie store may already be empty. Verify by checking if the list shows 'No website data'."
-			safety_gate: "caution"
-			
-		- step_id: "step_007_confirm_removal"
-			intent: "Confirm the removal of all cookies and website data."
-			locate: "The confirmation dialog with a 'Remove Now' button (or similar confirmation action)."
-			confirm_target: "A modal confirmation dialog is displayed with destructive action confirmation options."
-			act: "PAUSE and request explicit user confirmation before proceeding. Display message: 'This will permanently delete all Safari cookies and website data. Type CONFIRM to proceed or CANCEL to abort.'"
-			verify_outcome: "User has explicitly confirmed the action. Upon confirmation, click 'Remove Now' button."
-			fallback_paths:
-				- "If user types 'CANCEL' or does not confirm, click 'Cancel' button and proceed to step_009."
-			safety_gate: "irreversible_requires_confirmation"
-			user_confirmation_required: true
-			confirmation_prompt: "⚠️ WARNING: This will permanently delete ALL Safari cookies and website data. This action cannot be undone. Websites will forget your login sessions and preferences. Type 'CONFIRM' to proceed."
-			
-		- step_id: "step_008_verify_cookies_cleared"
-			intent: "Verify that all cookies and website data have been successfully removed."
-			locate: "The 'Manage Website Data' dialog content area."
-			confirm_target: "The dialog is still open and displaying updated content."
-			act: "Observe the content of the 'Manage Website Data' dialog after removal."
-			verify_outcome: "The dialog displays 'No website data' or shows an empty list, confirming successful deletion."
-			fallback_paths:
-				- "If data still appears, wait 1 second and refresh the dialog view by closing and reopening 'Manage Website Data'."
-			safety_gate: "safe"
-			
-		- step_id: "step_009_close_dialogs"
-			intent: "Close the Manage Website Data dialog and Settings window."
-			locate: "The 'Done' button in the 'Manage Website Data' dialog, and the close button (red circle) on the Settings window."
-			confirm_target: "Both the 'Done' button in the dialog and the window close button are visible."
-			act: "Click 'Done' to close the Manage Website Data dialog. Then click the red close button on the Safari Settings window, or press Command+W."
-			verify_outcome: "Both the dialog and the Settings window are closed. Safari browser window remains open and functional."
-			fallback_paths:
-				- "If 'Done' button click fails, press Escape key to dismiss the dialog."
-				- "Use Command+W to close the Settings window if the close button is unresponsive."
-			safety_gate: "safe"
-			
-		- step_id: "step_010_final_report"
-			intent: "Report task completion status to the user."
-			locate: "Not applicable; internal reporting step."
-			confirm_target: "Not applicable."
-			act: "Generate completion report with evidence summary."
-			verify_outcome: "User receives confirmation that Safari cookies have been cleared (or that the operation was cancelled if user declined)."
-			fallback_paths: []
-			safety_gate: "safe"
-			
+  goal: Clear all cookies and website data from Safari browser via macOS UI automation.
+  steps:
+    - step_id: "step_001_launch_safari"
+      intent: "Launch Safari browser if not already running."
+      locate: "Visible 'Safari' application icon in the macOS Dock, or the Safari executable in the Applications folder."
+      confirm_target: "The Safari icon is clearly identifiable (compass-like icon) in the Dock or Applications."
+      act: "Click the 'Safari' icon in the Dock. If not present, use the 'open_application' tool with 'Safari'."
+      verify_outcome: "Safari is the active foreground application, with a browser window visible."
+      fallback_paths:
+        - "If Dock icon is not found, open Spotlight (Command+Space), type 'Safari', and press Return."
+        - "Use 'open_application' tool with application name 'Safari'."
+      safety_gate: "safe"
+      
+    - step_id: "step_002_open_safari_settings"
+      intent: "Open Safari's Settings/Preferences window."
+      locate: "The 'Safari' menu item in the macOS menu bar (top-left of the screen, next to the Apple logo)."
+      confirm_target: "The menu bar displays 'Safari' as the active application menu."
+      act: "Click the 'Safari' menu in the menu bar, then click 'Settings...' (or 'Preferences...' on older macOS versions). Alternatively, press Command+Comma (⌘,)."
+      verify_outcome: "A Safari Settings/Preferences window appears with multiple tabs (General, Tabs, AutoFill, Passwords, Search, Security, Privacy, Websites, Extensions, Advanced)."
+      fallback_paths:
+        - "If menu click fails, use keyboard shortcut Command+Comma (⌘,) to open Settings directly."
+      safety_gate: "safe"
+      
+    - step_id: "step_003_navigate_to_privacy_tab"
+      intent: "Navigate to the Privacy tab within Safari Settings."
+      locate: "The 'Privacy' tab button/icon within the Safari Settings window toolbar (typically displays a hand icon or shield)."
+      confirm_target: "The 'Privacy' tab is visible in the Settings window's tab bar, distinguishable from other tabs like 'General' or 'Security'."
+      act: "Click the 'Privacy' tab button in the Settings window toolbar."
+      verify_outcome: "The Privacy pane is now displayed, showing options including 'Website tracking', 'Hide IP address', and a 'Manage Website Data...' button."
+      fallback_paths:
+        - "If tab is not immediately visible, look for a tab labeled with a hand/shield icon or scroll horizontally in the tab bar."
+      safety_gate: "safe"
+      
+    - step_id: "step_004_open_manage_website_data"
+      intent: "Open the 'Manage Website Data' dialog to access cookie storage."
+      locate: "The 'Manage Website Data...' button within the Privacy pane of Safari Settings."
+      confirm_target: "A button explicitly labeled 'Manage Website Data...' is visible in the Privacy tab content area."
+      act: "Click the 'Manage Website Data...' button."
+      verify_outcome: "A new sheet/dialog appears listing all stored website data (cookies, cache, etc.) with 'Remove All' and 'Done' buttons visible."
+      fallback_paths:
+        - "If button is not visible, scroll down within the Privacy pane to locate it."
+        - "Wait 500ms for the Privacy tab content to fully render before retrying."
+      safety_gate: "safe"
+      
+    - step_id: "step_005_checkpoint_before_deletion"
+      intent: "Create a checkpoint and capture evidence before initiating the irreversible deletion."
+      locate: "The 'Manage Website Data' dialog showing the list of stored cookies/data and the 'Remove All' button."
+      confirm_target: "The dialog is fully loaded, displaying website entries (or 'No website data' if already cleared)."
+      act: "Take a screenshot of the current state for evidence. Count or note the approximate number of website data entries displayed."
+      verify_outcome: "Screenshot captured. Evidence ledger updated with current cookie/data state."
+      fallback_paths: []
+      safety_gate: "checkpoint"
+      
+    - step_id: "step_006_click_remove_all"
+      intent: "Initiate the removal of all website data/cookies."
+      locate: "The 'Remove All' button in the 'Manage Website Data' dialog (typically in the bottom-left area of the dialog)."
+      confirm_target: "A button explicitly labeled 'Remove All' is visible and clickable."
+      act: "Click the 'Remove All' button."
+      verify_outcome: "A confirmation dialog appears asking to confirm the removal of all website data, with options like 'Remove Now' or 'Cancel'."
+      fallback_paths:
+        - "If 'Remove All' is grayed out or not present, the cookie store may already be empty. Verify by checking if the list shows 'No website data'."
+      safety_gate: "caution"
+      
+    - step_id: "step_007_confirm_removal"
+      intent: "Confirm the removal of all cookies and website data."
+      locate: "The confirmation dialog with a 'Remove Now' button (or similar confirmation action)."
+      confirm_target: "A modal confirmation dialog is displayed with destructive action confirmation options."
+      act: "PAUSE and request explicit user confirmation before proceeding. Display message: 'This will permanently delete all Safari cookies and website data. Type CONFIRM to proceed or CANCEL to abort.'"
+      verify_outcome: "User has explicitly confirmed the action. Upon confirmation, click 'Remove Now' button."
+      fallback_paths:
+        - "If user types 'CANCEL' or does not confirm, click 'Cancel' button and proceed to step_009."
+      safety_gate: "irreversible_requires_confirmation"
+      user_confirmation_required: true
+      confirmation_prompt: "⚠️ WARNING: This will permanently delete ALL Safari cookies and website data. This action cannot be undone. Websites will forget your login sessions and preferences. Type 'CONFIRM' to proceed."
+      
+    - step_id: "step_008_verify_cookies_cleared"
+      intent: "Verify that all cookies and website data have been successfully removed."
+      locate: "The 'Manage Website Data' dialog content area."
+      confirm_target: "The dialog is still open and displaying updated content."
+      act: "Observe the content of the 'Manage Website Data' dialog after removal."
+      verify_outcome: "The dialog displays 'No website data' or shows an empty list, confirming successful deletion."
+      fallback_paths:
+        - "If data still appears, wait 1 second and refresh the dialog view by closing and reopening 'Manage Website Data'."
+      safety_gate: "safe"
+      
+    - step_id: "step_009_close_dialogs"
+      intent: "Close the Manage Website Data dialog and Settings window."
+      locate: "The 'Done' button in the 'Manage Website Data' dialog, and the close button (red circle) on the Settings window."
+      confirm_target: "Both the 'Done' button in the dialog and the window close button are visible."
+      act: "Click 'Done' to close the Manage Website Data dialog. Then click the red close button on the Safari Settings window, or press Command+W."
+      verify_outcome: "Both the dialog and the Settings window are closed. Safari browser window remains open and functional."
+      fallback_paths:
+        - "If 'Done' button click fails, press Escape key to dismiss the dialog."
+        - "Use Command+W to close the Settings window if the close button is unresponsive."
+      safety_gate: "safe"
+      
+    - step_id: "step_010_final_report"
+      intent: "Report task completion status to the user."
+      locate: "Not applicable; internal reporting step."
+      confirm_target: "Not applicable."
+      act: "Generate completion report with evidence summary."
+      verify_outcome: "User receives confirmation that Safari cookies have been cleared (or that the operation was cancelled if user declined)."
+      fallback_paths: []
+      safety_gate: "safe"
+      
 constraints:
-	- "Before the irreversible 'Remove All' action, require explicit user confirmation."
-	- "Prefer keyboard shortcuts (Command+Comma) as fallback for menu navigation."
-	- "Do not close Safari entirely unless explicitly requested."
-	- "Capture screenshot evidence before deletion for audit trail."
-	- "Use UI-grounded steps: locate → confirm → act → verify."
-	- "Use short, atomic steps; one intent per step."
-	
+  - "Before the irreversible 'Remove All' action, require explicit user confirmation."
+  - "Prefer keyboard shortcuts (Command+Comma) as fallback for menu navigation."
+  - "Do not close Safari entirely unless explicitly requested."
+  - "Capture screenshot evidence before deletion for audit trail."
+  - "Use UI-grounded steps: locate → confirm → act → verify."
+  - "Use short, atomic steps; one intent per step."
+  
 assumptions:
-	- id: "safari_installed"
-		statement: "Safari browser is installed on the user's macOS system (default on all macOS installations)."
-		confidence: "high"
-		risk: "Safari may have been removed or is corrupted."
-		mitigation: "First step verifies Safari can be launched successfully."
-		verification_method: "Safari application window appears when launched."
-		
-	- id: "modern_macos_ui"
-		statement: "The macOS version uses 'Settings' terminology (macOS Ventura 13+) or 'Preferences' (older versions)."
-		confidence: "high"
-		risk: "Menu item labels may differ between macOS versions."
-		mitigation: "Instructions include both 'Settings...' and 'Preferences...' terminology, plus keyboard shortcut fallback."
-		verification_method: "Settings/Preferences window opens successfully."
-		
-	- id: "cookies_exist"
-		statement: "There is website data/cookies stored in Safari to be cleared."
-		confidence: "medium"
-		risk: "Cookie store may already be empty."
-		mitigation: "Step includes verification for empty state and graceful handling."
-		verification_method: "Manage Website Data dialog shows list of entries or 'No website data'."
-		
-	- id: "no_enterprise_restrictions"
-		statement: "Safari privacy settings are not locked by enterprise MDM policies."
-		confidence: "medium"
-		risk: "Managed devices may restrict access to privacy settings."
-		mitigation: "If settings are grayed out/locked, report to user that administrative restrictions prevent cookie clearing."
-		verification_method: "Privacy tab and Manage Website Data button are interactive."
-		
+  - id: "safari_installed"
+    statement: "Safari browser is installed on the user's macOS system (default on all macOS installations)."
+    confidence: "high"
+    risk: "Safari may have been removed or is corrupted."
+    mitigation: "First step verifies Safari can be launched successfully."
+    verification_method: "Safari application window appears when launched."
+    
+  - id: "modern_macos_ui"
+    statement: "The macOS version uses 'Settings' terminology (macOS Ventura 13+) or 'Preferences' (older versions)."
+    confidence: "high"
+    risk: "Menu item labels may differ between macOS versions."
+    mitigation: "Instructions include both 'Settings...' and 'Preferences...' terminology, plus keyboard shortcut fallback."
+    verification_method: "Settings/Preferences window opens successfully."
+    
+  - id: "cookies_exist"
+    statement: "There is website data/cookies stored in Safari to be cleared."
+    confidence: "medium"
+    risk: "Cookie store may already be empty."
+    mitigation: "Step includes verification for empty state and graceful handling."
+    verification_method: "Manage Website Data dialog shows list of entries or 'No website data'."
+    
+  - id: "no_enterprise_restrictions"
+    statement: "Safari privacy settings are not locked by enterprise MDM policies."
+    confidence: "medium"
+    risk: "Managed devices may restrict access to privacy settings."
+    mitigation: "If settings are grayed out/locked, report to user that administrative restrictions prevent cookie clearing."
+    verification_method: "Privacy tab and Manage Website Data button are interactive."
+    
 output_format:
-	type: "yaml"
-	structure: |
-		Task completion report including:
-		- Status: success | cancelled | failed
-		- Evidence: Screenshot before deletion, final state verification
-		- Timestamp: When cookies were cleared
-		- Notes: Any anomalies or user-cancelled actions
-		
+  type: "yaml"
+  structure: |
+    Task completion report including:
+    - Status: success | cancelled | failed
+    - Evidence: Screenshot before deletion, final state verification
+    - Timestamp: When cookies were cleared
+    - Notes: Any anomalies or user-cancelled actions
+    
 robustness_improvements:
-	retries:
-		- condition: "UI element not found after initial attempt."
-			max_attempts: 2
-			backoff: "250ms, then 500ms"
-			recovery_action: "Re-scan visible screen area. If in Settings window, ensure correct tab is selected."
-		- condition: "Dialog or sheet fails to appear after button click."
-			max_attempts: 2
-			backoff: "500ms"
-			recovery_action: "Re-click the triggering button. If still fails, try keyboard navigation."
-	rollbacks:
-		- trigger: "User cancels at confirmation step."
-			procedure: "Click 'Cancel' on any open dialogs. Close Settings window. Report 'Cookie clearing cancelled by user'."
-			reversibility_level: "full_reversion"
-		- trigger: "Unexpected error during deletion."
-			procedure: "Capture screenshot of error state. Close all dialogs safely. Report error details to user."
-			reversibility_level: "partial_reversion"
-	monitoring:
-		- checkpoint: "step_005_checkpoint_before_deletion"
-			evidence: "Screenshot of Manage Website Data dialog showing current cookies."
-			summary_point: "Pre-deletion state captured."
-		- checkpoint: "step_008_verify_cookies_cleared"
-			evidence: "Empty cookie list or 'No website data' message."
-			summary_point: "Deletion verified successful."
-			
+  retries:
+    - condition: "UI element not found after initial attempt."
+      max_attempts: 2
+      backoff: "250ms, then 500ms"
+      recovery_action: "Re-scan visible screen area. If in Settings window, ensure correct tab is selected."
+    - condition: "Dialog or sheet fails to appear after button click."
+      max_attempts: 2
+      backoff: "500ms"
+      recovery_action: "Re-click the triggering button. If still fails, try keyboard navigation."
+  rollbacks:
+    - trigger: "User cancels at confirmation step."
+      procedure: "Click 'Cancel' on any open dialogs. Close Settings window. Report 'Cookie clearing cancelled by user'."
+      reversibility_level: "full_reversion"
+    - trigger: "Unexpected error during deletion."
+      procedure: "Capture screenshot of error state. Close all dialogs safely. Report error details to user."
+      reversibility_level: "partial_reversion"
+  monitoring:
+    - checkpoint: "step_005_checkpoint_before_deletion"
+      evidence: "Screenshot of Manage Website Data dialog showing current cookies."
+      summary_point: "Pre-deletion state captured."
+    - checkpoint: "step_008_verify_cookies_cleared"
+      evidence: "Empty cookie list or 'No website data' message."
+      summary_point: "Deletion verified successful."
+      
 self_check:
-	- "All required keys present in YAML structure."
-	- "Every action step uses locate → confirm_target → act → verify_outcome pattern."
-	- "Irreversible deletion action (step_007) is gated with 'irreversible_requires_confirmation' and explicit user prompt."
-	- "Fallback paths provided for critical UI interactions."
-	- "macOS-appropriate terminology and keyboard shortcuts used."
-	- "Evidence collection specified before destructive action."
-	
+  - "All required keys present in YAML structure."
+  - "Every action step uses locate → confirm_target → act → verify_outcome pattern."
+  - "Irreversible deletion action (step_007) is gated with 'irreversible_requires_confirmation' and explicit user prompt."
+  - "Fallback paths provided for critical UI interactions."
+  - "macOS-appropriate terminology and keyboard shortcuts used."
+  - "Evidence collection specified before destructive action."
+  
 validation_tests:
-	schema_tests:
-		- "All required keys present at top level."
-		- "Each step contains required fields: step_id, intent, locate, confirm_target, act, verify_outcome, safety_gate."
-	ui_tests:
-		- "All UI elements referenced are standard Safari/macOS elements."
-		- "Keyboard shortcuts are valid macOS commands."
-	safety_tests:
-		- "Deletion step requires explicit user confirmation."
-		- "No automatic bypass of confirmation dialogs."
-		
+  schema_tests:
+    - "All required keys present at top level."
+    - "Each step contains required fields: step_id, intent, locate, confirm_target, act, verify_outcome, safety_gate."
+  ui_tests:
+    - "All UI elements referenced are standard Safari/macOS elements."
+    - "Keyboard shortcuts are valid macOS commands."
+  safety_tests:
+    - "Deletion step requires explicit user confirmation."
+    - "No automatic bypass of confirmation dialogs."
+    
 failure_playbooks:
-	- name: "settings_locked"
-		detection: "'Manage Website Data' button is grayed out or unclickable."
-		response:
-			- "Check if Safari is managed by enterprise MDM policy."
-			- "Report to user: 'Privacy settings appear to be restricted. Administrative access may be required.'"
-			- "Abort task gracefully."
-	- name: "unexpected_dialog"
-		detection: "An unexpected modal appears during the process."
-		response:
-			- "Identify dialog title and button labels."
-			- "If safe, click 'Cancel' or 'Close' to dismiss."
-			- "Resume from last checkpoint."
-	- name: "safari_crash"
-		detection: "Safari becomes unresponsive or crashes during operation."
-		response:
-			- "Wait 3 seconds for potential recovery."
-			- "If unresponsive, force quit Safari via 'quit_application' tool."
-			- "Report partial completion status to user."
+  - name: "settings_locked"
+    detection: "'Manage Website Data' button is grayed out or unclickable."
+    response:
+      - "Check if Safari is managed by enterprise MDM policy."
+      - "Report to user: 'Privacy settings appear to be restricted. Administrative access may be required.'"
+      - "Abort task gracefully."
+  - name: "unexpected_dialog"
+    detection: "An unexpected modal appears during the process."
+    response:
+      - "Identify dialog title and button labels."
+      - "If safe, click 'Cancel' or 'Close' to dismiss."
+      - "Resume from last checkpoint."
+  - name: "safari_crash"
+    detection: "Safari becomes unresponsive or crashes during operation."
+    response:
+      - "Wait 3 seconds for potential recovery."
+      - "If unresponsive, force quit Safari via 'quit_application' tool."
+      - "Report partial completion status to user."
