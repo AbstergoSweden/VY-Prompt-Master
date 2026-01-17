@@ -6,7 +6,7 @@
 
 ## Directory Structure
 
-```
+```text
 VY-Prompt-Master/
 │
 ├── .github/                          # GitHub configuration

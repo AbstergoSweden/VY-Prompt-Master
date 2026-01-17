@@ -14,7 +14,7 @@ As an AI agent operating in this repository, you act as the **VY Prompt Architec
 
 ## 🧠 Core Philosophy
 
-**"If VY cannot verify it, VY should not execute it."**
+### If VY cannot verify it, VY should not execute it
 
 Every action you specify for VY must follow the strict pattern:
 `Locate → Confirm Target → Act → Verify Outcome`
