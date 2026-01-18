@@ -51,6 +51,21 @@ function createValidator(): AjvInstance {
     return ajv;
 }
 
+/** Cached validator instance */
+let cachedValidate: any = null;
+
+/** Gets or creates the cached validator */
+function getValidator(): any {
+    if (cachedValidate) {
+        return cachedValidate;
+    }
+
+    const schema = loadSchema();
+    const ajv = createValidator();
+    cachedValidate = ajv.compile(schema);
+    return cachedValidate;
+}
+
 /**
  * Validates a VY prompt specification against the JSON schema
  * @param yamlContent - YAML string to validate
@@ -77,10 +92,8 @@ export function validateSchema(yamlContent: string): ValidationResult {
         };
     }
 
-    // Load schema and validate
-    const schema = loadSchema();
-    const ajv = createValidator();
-    const validate = ajv.compile(schema);
+    // Use cached validator
+    const validate = getValidator();
     const valid = validate(parsed);
 
     if (!valid) {
@@ -116,9 +129,7 @@ export function parseAndValidate(yamlContent: string): { spec: VYPromptSpec | nu
  * @returns ValidationResult
  */
 export function validateSpec(spec: VYPromptSpec): ValidationResult {
-    const schema = loadSchema();
-    const ajv = createValidator();
-    const validate = ajv.compile(schema);
+    const validate = getValidator();
     const valid = validate(spec);
 
     return {

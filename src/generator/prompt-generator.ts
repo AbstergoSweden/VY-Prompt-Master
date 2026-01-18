@@ -12,10 +12,16 @@ import type { AIAdapter, AIMessage } from './ai-adapters/index.js';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 
+let cachedFramework: string | null = null;
+
 /** Loads the VY Unified Framework v3 (authoritative single source of truth) */
 function loadFramework(): string {
+    if (cachedFramework) {
+        return cachedFramework;
+    }
     const frameworkPath = join(__dirname, '../../framework/VY-Unified-Framework-v3.yaml');
-    return readFileSync(frameworkPath, 'utf-8');
+    cachedFramework = readFileSync(frameworkPath, 'utf-8');
+    return cachedFramework;
 }
 
 /** Builds the system prompt from the unified framework */
