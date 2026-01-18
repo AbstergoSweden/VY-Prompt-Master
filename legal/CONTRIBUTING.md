@@ -96,7 +96,7 @@ Follow conventional commit format:
 
 **Example:**
 
-```
+```text
 feat: add fallback validation to schema
 
 Added required validation for fallback_paths field to ensure

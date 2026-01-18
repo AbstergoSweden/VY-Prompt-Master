@@ -1,4 +1,4 @@
-VY APP: COMPREHENSIVE TOOL SYSTEM, CAPABILITIES, AND INTERACTION MECHANISMS
+# VY APP: COMPREHENSIVE TOOL SYSTEM, CAPABILITIES, AND INTERACTION MECHANISMS
 
 Vy's power as an intelligent computer automation agent derives not only from its sophisticated AI architecture but also from its extensive toolkit of specialized capabilities. This document provides an in-depth exploration of Vy's tool system, the diverse range of operations it can perform, and the mechanisms through which it interacts with various applications, file systems, and web services.
 
