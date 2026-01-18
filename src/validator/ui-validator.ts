@@ -165,41 +165,49 @@ export function validateUI(spec: VYPromptSpec): ValidationResult {
     const allErrors: ValidationError[] = [];
     const allWarnings: ValidationWarning[] = [];
 
-    // Validate each step
+    const seenIds = new Set<string>();
+    const duplicates = new Set<string>();
+    let previousStepNumber = -1;
+
+    // Validate each step in a single pass
     spec.task.steps.forEach((step, index) => {
+        // 1. Validate Step Content
         const { errors, warnings } = validateStep(step, index);
         allErrors.push(...errors);
         allWarnings.push(...warnings);
+
+        // 2. Check for unique step IDs
+        if (seenIds.has(step.step_id)) {
+            duplicates.add(step.step_id);
+        } else {
+            seenIds.add(step.step_id);
+        }
+
+        // 3. Check step numbering sequence
+        const match = step.step_id.match(/^step_(\d{3})_/);
+        if (match) {
+            const currentStepNumber = parseInt(match[1], 10);
+            // Only check order if we have a valid previous number and current is not greater
+            if (previousStepNumber !== -1 && currentStepNumber <= previousStepNumber) {
+                allWarnings.push({
+                    path: `/task/steps/${index}/step_id`,
+                    message: `Step numbers should be in ascending order. Step ${currentStepNumber} comes after ${previousStepNumber}.`,
+                    code: 'UI_STEP_ORDER',
+                    severity: 'warning',
+                });
+            }
+            // Update previous number if current is valid
+            previousStepNumber = currentStepNumber;
+        }
     });
 
-    // Check for unique step IDs
-    const stepIds = spec.task.steps.map(s => s.step_id);
-    const duplicates = stepIds.filter((id, i) => stepIds.indexOf(id) !== i);
-
-    if (duplicates.length > 0) {
+    if (duplicates.size > 0) {
         allErrors.push({
             path: '/task/steps',
-            message: `Duplicate step_id(s) found: ${[...new Set(duplicates)].join(', ')}`,
+            message: `Duplicate step_id(s) found: ${Array.from(duplicates).join(', ')}`,
             code: 'UI_DUPLICATE_STEP_ID',
             severity: 'error',
         });
-    }
-
-    // Check step numbering sequence
-    const stepNumbers = stepIds.map(id => {
-        const match = id.match(/^step_(\d{3})_/);
-        return match ? parseInt(match[1], 10) : null;
-    }).filter((n): n is number => n !== null);
-
-    for (let i = 1; i < stepNumbers.length; i++) {
-        if (stepNumbers[i] <= stepNumbers[i - 1]) {
-            allWarnings.push({
-                path: `/task/steps/${i}/step_id`,
-                message: `Step numbers should be in ascending order. Step ${stepNumbers[i]} comes after ${stepNumbers[i - 1]}.`,
-                code: 'UI_STEP_ORDER',
-                severity: 'warning',
-            });
-        }
     }
 
     return {
