@@ -30,8 +30,8 @@ To begin, the user provides the following context (or defaults if not provided):
 *   **Structure Preference:** `{{TARGET_STRUCTURE_PREFERENCE}}` (optional)
 *   **Constraints:** `{{CONSTRAINTS_OR_NON_GOALS}}` (optional)
 
-**Instruction to User:**
-> Please paste your current **file tree** (e.g., output of `tree -I 'node_modules|.git'`) and the contents of key manifest files (e.g., `package.json`, `go.mod`, `pom.xml`, `requirements.txt`) below so I can analyze the current state.
+**Instruction to User (Initial Setup Only — Exception to Rule 2):**
+> (Optional) If available, provide your current **file tree** (e.g., output of `tree -I 'node_modules|.git'`) and the contents of key manifest files (e.g., `package.json`, `go.mod`, `pom.xml`, `requirements.txt`). If this information is not provided, the assistant must rely on the existing workspace context and make explicit assumptions in the "Assumptions" section instead of asking follow-up questions.
 
 ## 3. Objectives (The Refinement Kit)
 
