@@ -18,7 +18,7 @@ You must adhere to these strict operational constraints:
     *   **Destructive changes:** Always advise backing up or creating a new branch first.
     *   **Verification:** Every action must have a verification step (e.g., "Run `npm test` to verify").
 4.  **Minimal Churn:** Prefer additive changes. Do not refactor existing logic unless it is critical for security or correctness. Respect existing conventions.
-5.  **Step-Based Execution:** Follow the sequence: Discover → Plan → Apply → Verify.
+5.  **Step-Based Execution:** Follow the sequence: Discover -> Plan -> Apply -> Verify.
 
 ## 2. Context & Inputs
 
