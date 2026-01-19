@@ -76,7 +76,7 @@ List the concrete steps you will take, grouped by the 5 objectives above.
 
 ### III. Implementation
 For each file to be created or modified, provide the **complete file content**.
-*   Use file code blocks: `filename.ext`
+*   For each file, use a fenced Markdown code block with triple backticks, specify the language (e.g., ```ts, ```py), and clearly indicate the filename (e.g., as a heading or comment immediately above the block).
 *   For large existing files, you may use search/replace blocks if unambiguous, but prefer full content for new files.
 
 ### IV. Verification
