@@ -1,0 +1,101 @@
+# Pre-commit configuration for VY Prompt Master
+# Ensures code quality and security before commits
+
+repos:
+  # Secret scanning
+  - repo: https://github.com/gitleaks/gitleaks
+    rev: v8.18.0
+    hooks:
+      - id: gitleaks
+        name: Detect hardcoded secrets
+        description: Scan commits for secrets using gitleaks
+        entry: gitleaks protect --verbose --redact --staged
+        language: golang
+        pass_filenames: false
+        
+  # YAML linting
+  - repo: https://github.com/adrienverge/yamllint
+    rev: v1.32.0
+    hooks:
+      - id: yamllint
+        name: Lint YAML files
+        description: Check YAML syntax and style
+        files: \.(yaml|yml)$
+        exclude: |
+          (?x)^(
+            node_modules/|
+            dist/|
+            package-lock.json|
+            coverage/
+          )
+        args:
+          - -c
+          - |
+            extends: default
+            rules:
+              line-length: disable
+              document-start: disable
+              truthy:
+                allowed-values: ['true', 'false', 'on', 'off', 'yes', 'no']
+
+  # JSON linting
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v4.4.0
+    hooks:
+      - id: check-json
+        name: Validate JSON syntax
+        files: \.json$
+        exclude: |
+          (?x)^(
+            node_modules/|
+            dist/|
+            package-lock.json
+          )
+        
+  # Check for merge conflicts
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v4.4.0
+    hooks:
+      - id: check-merge-conflict
+        name: Check for merge conflict markers
+
+  # Trailing whitespace
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v4.4.0
+    hooks:
+      - id: trailing-whitespace
+        name: Remove trailing whitespace
+        exclude: |
+          (?x)^(
+            node_modules/|
+            dist/|
+            \.min\.|  # Don't touch minified files
+            coverage/
+          )
+
+  # End-of-file fixer
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v4.4.0
+    hooks:
+      - id: end-of-file-fixer
+        name: Ensure files end with newline
+        exclude: |
+          (?x)^(
+            node_modules/|
+            dist/|
+            coverage/
+          )
+
+  # Check for large files
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v4.4.0
+    hooks:
+      - id: check-added-large-files
+        name: Check for large file additions
+        args: ['--maxkb=500']
+        exclude: |
+          (?x)^(
+            test/|  # Allow large test fixtures
+            fixtures/|
+            examples/
+          )

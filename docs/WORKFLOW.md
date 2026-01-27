@@ -21,7 +21,7 @@ User Request → Classification → Planning → YAML Generation → Validation 
 Every request must specify (or the system will ask for):
 
 | Input | Description | Example |
-|-------|-------------|---------|
+| ------- | ------------- | --------- |
 | Target application/site | What app or website is involved | Safari, Finder, Excel |
 | Access method | How to interact | desktop, web, hybrid |
 | Desired end state | What "done" looks like | "Email sent with attachment" |
@@ -56,7 +56,7 @@ Every request must specify (or the system will ask for):
 ### Classification Outcomes
 
 | Result | Action |
-|--------|--------|
+| -------- | -------- |
 | **Disallowed** | Safe refusal, no YAML output |
 | **Ambiguous** | Output `inputs_missing` YAML list only |
 | **High-Risk** | Add confirmation checkpoint, then generate |
@@ -94,7 +94,7 @@ Format: `step_<NNN>_<action_name>`
 ### Safety Gate Assignment
 
 | Gate Level | Use Case | Example Actions |
-|------------|----------|-----------------|
+| ------------ | ---------- | ----------------- |
 | `safe` | Routine, non-destructive | Open app, navigate, read |
 | `caution` | Sensitive but reversible | Write file, change setting |
 | `irreversible_requires_confirmation` | Permanent effects | Delete, send, purchase |
@@ -183,7 +183,7 @@ failure_playbooks:
 ### Four Categories of Tests
 
 | Category | What It Checks |
-|----------|----------------|
+| ---------- | ---------------- |
 | **Schema Tests** | Required keys, types, formats |
 | **UI Tests** | locate+confirm+verify for every step |
 | **Safety Tests** | No disallowed content, proper gates |
@@ -263,7 +263,7 @@ npx ajv validate -s framework/vy-prompt-schema.json -d my-prompt.yaml
 ### Error Handling
 
 | Failure Type | Response |
-|--------------|----------|
+| -------------- | ---------- |
 | Transient | Retry with backoff (250ms → 500ms → 1s) |
 | UI not found | Try fallback paths |
 | Verification failed | Rollback if available, else escalate |

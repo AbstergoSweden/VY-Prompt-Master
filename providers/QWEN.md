@@ -9,11 +9,12 @@ The VY Prompt Master framework transforms user task descriptions into detailed, 
 ## Architecture & Key Components
 
 ### Core Files
-- **VY-Meta-Prompt.yaml**: The consolidated meta-prompt that unifies all knowledge, personas, and specifications into a single framework
+- **VY-Unified-Framework-v3.yaml**: The consolidated framework that defines the generation guidelines and operational principles
 - **vy-prompt-schema.json**: JSON Schema for validating VY prompt specifications
-- **Schema Overview.md**: Documentation of the schema structure and validation patterns
-- **Knowledge files (1-3.txt)**: Comprehensive documentation of VY's architecture, tool system, and operational intelligence
-- **VY-Prompt-Engineering-Persona.yaml**: Specialized persona for prompt engineering tasks
+- **AGENTS.md**: AI Development Guide with comprehensive documentation
+- **package.json**: Defines the CLI tool and dependencies
+- **src/cli/index.ts**: Main CLI entry point
+- **src/orchestrator/index.ts**: Main pipeline coordinating generation, validation, and refinement
 
 ### Prompt Specification Structure
 All VY prompts follow a standardized structure with required components:
@@ -39,15 +40,32 @@ Each step follows an 8-field pattern:
 
 ## Building and Running
 
-This is a configuration/documentation framework rather than a traditional codebase that compiles. The system works by:
+This is a Node.js/TypeScript project that can be built and run with npm:
 
-1. Using the YAML prompt specifications with the VY automation agent
-2. Validating prompts against the JSON schema using tools like AJV:
+1. Install dependencies:
    ```bash
-   npx ajv validate -s vy-prompt-schema.json -d my-prompt.json
+   npm install
    ```
 
-3. Following the structured approach outlined in the meta-prompt to generate new automation specifications
+2. Build the project:
+   ```bash
+   npm run build
+   ```
+
+3. Generate a VY prompt from a task description:
+   ```bash
+   npm run generate "Open Safari and navigate to example.com"
+   ```
+
+4. Validate an existing YAML prompt:
+   ```bash
+   npm run validate examples/prompts/test_promptV3.yaml
+   ```
+
+5. Run all quality checks (build, test, typecheck, lint):
+   ```bash
+   npm run preflight
+   ```
 
 ## Development Conventions
 
@@ -97,9 +115,15 @@ This is a configuration/documentation framework rather than a traditional codeba
 ## Usage Guidelines
 
 ### For Prompt Creation
-1. Start with the VY-Meta-Prompt.yaml as a reference
+1. Use the CLI tool to generate prompts from task descriptions:
+   ```bash
+   npm run generate "your task description here"
+   ```
 2. Follow the 8-field UI action primitive pattern
-3. Validate against the JSON schema
+3. Validate against the JSON schema using:
+   ```bash
+   npm run validate your-prompt.yaml
+   ```
 4. Include comprehensive self-check questions
 5. Add appropriate safety gates and confirmation prompts
 

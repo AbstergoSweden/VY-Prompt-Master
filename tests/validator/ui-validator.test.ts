@@ -123,7 +123,7 @@ describe('UI Validator', () => {
                 createStep({ step_id: 'step_001_first' }), // out of order
             ]);
             const result = validateUI(spec);
-            expect(result.warnings.some(w => w.code === 'UI_STEP_ORDER')).toBe(true);
+            expect(result.errors.some(e => e.code === 'UI_STEP_SEQUENCE_INVALID')).toBe(true);
         });
     });
 

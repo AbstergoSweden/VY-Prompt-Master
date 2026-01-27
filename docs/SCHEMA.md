@@ -1,3 +1,5 @@
+# VY Prompt Schema Reference
+
 ## Schema Overview
 
 **File:** `~VY Prompt master/vy-prompt-schema.json`
@@ -5,7 +7,7 @@
 ### Required Top-Level Properties
 
 | Property | Type | Description |
-|----------|------|-------------|
+| ---------- | ------ | ------------- |
 | `identity` | string | Role/persona for VY |
 | `purpose` | string | What the prompt accomplishes |
 | `context` | object | Platform, access method, auth state, environment |
@@ -18,7 +20,7 @@
 ### Optional Properties
 
 | Property | Type | Description |
-|----------|------|-------------|
+| ---------- | ------ | ------------- |
 | `assumptions` | array | Documented assumptions with risk/mitigation |
 | `robustness_improvements` | object | Retries, rollbacks, monitoring |
 | `validation_tests` | object | Schema, UI, safety, determinism tests |
@@ -46,6 +48,7 @@ Every step **requires** all 8 fields from the locate→confirm→act→verify pa
 ```
 
 **Optional step fields:**
+
 - `wait_before` / `wait_after` (ms)
 - `screenshot_before` / `screenshot_after` (boolean)
 - `user_confirmation_required` (boolean)
@@ -67,7 +70,7 @@ Every step **requires** all 8 fields from the locate→confirm→act→verify pa
 ### Validation Patterns
 
 | Field | Pattern | Example |
-|-------|---------|---------|
+| ------- | --------- | --------- |
 | `step_id` | `^step_[0-9]{3}_[a-z][a-z0-9_]*$` | `step_001_launch_browser` |
 | `input.name` | `^[a-z][a-z0-9_]*$` | `user_task_description` |
 | `assumption.id` | `^[a-z][a-z0-9_]*$` | `vy_local_agent_presence` |
@@ -88,7 +91,7 @@ npx ajv validate -s vy-prompt-schema.json -d my-prompt.json
 ```
 
 Or use it in VS Code with YAML extension by adding to your YAML file:
+
 ```yaml
 # yaml-language-server: $schema=./vy-prompt-schema.json
 ```
-

@@ -4,7 +4,7 @@
  * to generate safe, deterministic VY automation prompts.
  */
 
-import { readFileSync } from 'fs';
+import { readFileSync, statSync } from 'fs';
 import { fileURLToPath } from 'url';
 import { dirname, join } from 'path';
 import type { AIAdapter, AIMessage } from './ai-adapters/index.js';
@@ -12,16 +12,30 @@ import type { AIAdapter, AIMessage } from './ai-adapters/index.js';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 
-let cachedFramework: string | null = null;
+// Global cache for the framework content
+const frameworkCache = {
+    content: null as string | null,
+    lastModified: null as number | null,
+};
 
 /** Loads the VY Unified Framework v3 (authoritative single source of truth) */
 function loadFramework(): string {
-    if (cachedFramework) {
-        return cachedFramework;
-    }
     const frameworkPath = join(__dirname, '../../framework/VY-Unified-Framework-v3.yaml');
-    cachedFramework = readFileSync(frameworkPath, 'utf-8');
-    return cachedFramework;
+
+    // Check if we have a cached version and if the file has been modified
+    const stats = statSync(frameworkPath);
+    const currentModified = stats.mtimeMs;
+
+    if (frameworkCache.content && frameworkCache.lastModified === currentModified) {
+        // Return cached content if file hasn't changed
+        return frameworkCache.content;
+    }
+
+    // Load fresh content
+    frameworkCache.content = readFileSync(frameworkPath, 'utf-8');
+    frameworkCache.lastModified = currentModified;
+
+    return frameworkCache.content;
 }
 
 /** Builds the system prompt from the unified framework */
@@ -118,21 +132,8 @@ export async function generatePrompt(
         }
     }
 
-    // Clean up the response - remove any markdown code fences if present
-    let yaml = response.content.trim();
-
-    // Remove markdown code fences if present
-    if (yaml.startsWith('```yaml')) {
-        yaml = yaml.slice(7);
-    } else if (yaml.startsWith('```')) {
-        yaml = yaml.slice(3);
-    }
-
-    if (yaml.endsWith('```')) {
-        yaml = yaml.slice(0, -3);
-    }
-
-    return yaml.trim();
+    // Use the improved YAML extraction function
+    return extractYaml(response.content);
 }
 
 /**
@@ -141,17 +142,47 @@ export async function generatePrompt(
  * @returns Extracted YAML content
  */
 export function extractYaml(content: string): string {
-    // Try to find YAML block
-    const yamlMatch = content.match(/```ya?ml\n([\s\S]*?)```/);
-    if (yamlMatch) {
-        return yamlMatch[1].trim();
+    // First, try to find the YAML block with various fence types
+    const fencePatterns = [
+        /```ya?ml\s*\n([\s\S]*?)```/,  // Standard YAML fence
+        /```\s*\n([\s\S]*?)(?=```|$)/,  // Generic fence (fallback)
+        /~~~ya?ml\s*\n([\s\S]*?)~~~/,   // Tilde fences
+        /~~~\s*\n([\s\S]*?)(?=~~~|$)/   // Generic tilde fence
+    ];
+
+    for (const pattern of fencePatterns) {
+        const match = content.match(pattern);
+        if (match && match[1]) {
+            return match[1].trim();
+        }
     }
 
-    // Check if content starts with --- (YAML document marker)
-    if (content.trim().startsWith('---') || content.trim().startsWith('identity:')) {
-        return content.trim();
+    // Check if content starts with --- (YAML document marker) or begins with a top-level key
+    const trimmedContent = content.trim();
+    if (trimmedContent.startsWith('---') ||
+        /^identity:\s*/m.test(trimmedContent) ||
+        /^purpose:\s*/m.test(trimmedContent) ||
+        /^context:\s*/m.test(trimmedContent)) {
+
+        // If content starts with ---, return the whole content starting from ---
+        if (trimmedContent.startsWith('---')) {
+            return trimmedContent;
+        }
+
+        // Otherwise, extract content that looks like YAML (from first top-level key to end of meaningful content)
+        const yamlStart = Math.min(
+            trimmedContent.indexOf('identity:') !== -1 ? trimmedContent.indexOf('identity:') : Infinity,
+            trimmedContent.indexOf('purpose:') !== -1 ? trimmedContent.indexOf('purpose:') : Infinity,
+            trimmedContent.indexOf('context:') !== -1 ? trimmedContent.indexOf('context:') : Infinity
+        );
+
+        if (isFinite(yamlStart)) {
+            return trimmedContent.substring(yamlStart).trim();
+        }
+
+        return trimmedContent;
     }
 
-    // Return as-is and hope for the best
-    return content.trim();
+    // If no clear YAML structure found, return the original content trimmed
+    return trimmedContent;
 }

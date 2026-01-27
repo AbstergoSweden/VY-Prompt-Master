@@ -70,10 +70,8 @@ jobs:
         uses: DavidAnson/markdownlint-cli2-action@v16
         with:
           globs: 'README.md'
-        continue-on-error: true
       
       - name: Lint docs
         uses: DavidAnson/markdownlint-cli2-action@v16
         with:
           globs: 'docs/*.md'
-        continue-on-error: true
