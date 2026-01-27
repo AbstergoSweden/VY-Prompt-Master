@@ -16,7 +16,7 @@
 
 ```bash
 # Clone repository
-git clone https://github.com/AbstergoSweden/VY-Prompt-Master.git
+git clone https://github.com/Fayeblade1488/VY-Prompt-Master.git
 cd VY-Prompt-Master
 
 # Install validation tools (optional)

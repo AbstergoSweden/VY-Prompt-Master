@@ -15,7 +15,7 @@ We take security seriously. If you discover a security vulnerability, please rep
 ### How to Report
 
 1. **Do NOT** create a public GitHub issue for security vulnerabilities
-2. **Email**: <security@example.com> (replace with actual contact)
+2. **Email**: <2-craze-headmen@icloud.com>
 3. **GitHub Security Advisories**: Use the "Security" tab to report privately
 
 ### What to Include
@@ -61,3 +61,4 @@ We appreciate responsible disclosure and will credit security researchers who:
 ---
 
 **Contact**: <security@example.com> | [GitHub Security Advisories](../../security/advisories)
+s](../../security/advisories)

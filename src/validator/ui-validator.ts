@@ -54,7 +54,7 @@ function validateStep(step: VYStep, index: number): { errors: ValidationError[];
     if (step.intent.length < MIN_LENGTHS.intent) {
         errors.push({
             path: `${stepPath}/intent`,
-            message: `Intent too short (${step.intent.length} chars). Minimum ${MIN_LENGTHS.intent} required.`,
+            message: `Intent too short (${step.intent.length} chars). Minimum ${MIN_LENGTHS.intent} required. Intent should clearly describe what this step accomplishes.`,
             code: 'UI_INTENT_TOO_SHORT',
             severity: 'error',
         });
@@ -63,7 +63,7 @@ function validateStep(step: VYStep, index: number): { errors: ValidationError[];
     if (step.locate.length < MIN_LENGTHS.locate) {
         errors.push({
             path: `${stepPath}/locate`,
-            message: `Locate description too short (${step.locate.length} chars). Minimum ${MIN_LENGTHS.locate} required.`,
+            message: `Locate description too short (${step.locate.length} chars). Minimum ${MIN_LENGTHS.locate} required. Locate should provide unambiguous UI element description with unique identifiers.`,
             code: 'UI_LOCATE_TOO_SHORT',
             severity: 'error',
         });
@@ -72,7 +72,7 @@ function validateStep(step: VYStep, index: number): { errors: ValidationError[];
     if (step.act.length < MIN_LENGTHS.act) {
         errors.push({
             path: `${stepPath}/act`,
-            message: `Act description too short (${step.act.length} chars). Minimum ${MIN_LENGTHS.act} required.`,
+            message: `Act description too short (${step.act.length} chars). Minimum ${MIN_LENGTHS.act} required. Act should specify specific action with exact parameters.`,
             code: 'UI_ACT_TOO_SHORT',
             severity: 'error',
         });
@@ -81,7 +81,7 @@ function validateStep(step: VYStep, index: number): { errors: ValidationError[];
     if (step.verify_outcome.length < MIN_LENGTHS.verify_outcome) {
         errors.push({
             path: `${stepPath}/verify_outcome`,
-            message: `Verify outcome too short (${step.verify_outcome.length} chars). Minimum ${MIN_LENGTHS.verify_outcome} required.`,
+            message: `Verify outcome too short (${step.verify_outcome.length} chars). Minimum ${MIN_LENGTHS.verify_outcome} required. Verify outcome should describe observable evidence of success.`,
             code: 'UI_VERIFY_TOO_SHORT',
             severity: 'error',
         });
@@ -153,6 +153,24 @@ function validateStep(step: VYStep, index: number): { errors: ValidationError[];
         });
     }
 
+    // Check for common Windows-specific shortcuts that should be macOS equivalents
+    const windowsShortcuts = [
+        { pattern: /\balt\+/i, replacement: 'Option (⌥)' },
+        { pattern: /\bwindows|win\+/i, replacement: 'Command (⌘)' },
+        { pattern: /\bshift\+del\b/i, replacement: 'Cmd+Backspace' },
+    ];
+
+    for (const { pattern, replacement } of windowsShortcuts) {
+        if (pattern.test(step.act)) {
+            warnings.push({
+                path: `${stepPath}/act`,
+                message: `Step uses Windows-specific shortcut. On macOS, consider using ${replacement} instead.`,
+                code: 'UI_WINDOWS_SHORTCUT_USED',
+                severity: 'warning',
+            });
+        }
+    }
+
     return { errors, warnings };
 }
 
@@ -187,17 +205,27 @@ export function validateUI(spec: VYPromptSpec): ValidationResult {
         const match = step.step_id.match(/^step_(\d{3})_/);
         if (match) {
             const currentStepNumber = parseInt(match[1], 10);
-            // Only check order if we have a valid previous number and current is not greater
-            if (previousStepNumber !== -1 && currentStepNumber <= previousStepNumber) {
-                allWarnings.push({
+            // Check if the step number is valid (non-negative)
+            if (isNaN(currentStepNumber) || currentStepNumber < 0) {
+                allErrors.push({
                     path: `/task/steps/${index}/step_id`,
-                    message: `Step numbers should be in ascending order. Step ${currentStepNumber} comes after ${previousStepNumber}.`,
-                    code: 'UI_STEP_ORDER',
-                    severity: 'warning',
+                    message: `Invalid step number in step_id: "${step.step_id}". Step numbers must be non-negative integers.`,
+                    code: 'UI_INVALID_STEP_NUMBER',
+                    severity: 'error',
                 });
+            } else {
+                // Check if the step number is in strict ascending order (incrementing by 1)
+                if (previousStepNumber !== -1 && currentStepNumber !== previousStepNumber + 1) {
+                    allErrors.push({
+                        path: `/task/steps/${index}/step_id`,
+                        message: `Step numbers must be in strict ascending sequence. Expected ${previousStepNumber + 1}, got ${currentStepNumber}.`,
+                        code: 'UI_STEP_SEQUENCE_INVALID',
+                        severity: 'error',
+                    });
+                }
+                // Update previous number if current is valid
+                previousStepNumber = currentStepNumber;
             }
-            // Update previous number if current is valid
-            previousStepNumber = currentStepNumber;
         }
     });
 
@@ -218,7 +246,7 @@ export function validateUI(spec: VYPromptSpec): ValidationResult {
 }
 
 /**
- * Checks that all 8 required fields are present in each step
+ * Checks that all 8 required fields are present and non-empty in each step
  * @param spec - The VY prompt specification
  * @returns ValidationResult
  */
@@ -230,7 +258,7 @@ export function validateRequiredFields(spec: VYPromptSpec): ValidationResult {
 
         for (const field of REQUIRED_STEP_FIELDS) {
             const value = step[field as keyof VYStep];
-            if (value === undefined || value === null) {
+            if (value === undefined || value === null || (typeof value === 'string' && value.trim() === '')) {
                 errors.push({
                     path: `${stepPath}/${field}`,
                     message: `Missing required field: ${field}`,

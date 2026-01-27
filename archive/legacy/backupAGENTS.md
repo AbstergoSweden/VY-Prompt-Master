@@ -374,7 +374,7 @@ Every UI interaction follows this strict pattern:
 **Version Management**:
 - Current version: 1.1 (as of 2026.01.14)
 - Author: Faye Håkansdotter
-- Contact: https://github.com/Fayeblade1488, https://github.com/AbstergoSweden
+- Contact: https://github.com/Fayeblade1488
 - Version history tracked within persona YAML files
 
 **Change Tracking**:

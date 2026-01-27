@@ -1,0 +1,171 @@
+{
+  "schema_version": "3.0.0",
+  "protocol_version": "3.0.0",
+  "phase": "planning",
+  "timestamp": "2026-01-26T23:32:00Z",
+  "agent": {
+    "id": "agent_planning",
+    "status": "success",
+    "duration_ms": 3000
+  },
+  "constraints": {
+    "time_budget_minutes": 60,
+    "max_files_changed": 15,
+    "max_lines_changed": 500,
+    "risk_tolerance": "medium",
+    "focus_areas": ["security", "ci", "tests"],
+    "exclude_areas": []
+  },
+  "backlog": [
+    {
+      "id": "ITEM-001",
+      "priority": "P0",
+      "category": "security",
+      "title": "Fix dependency vulnerability in esbuild/vite",
+      "description": "Update vitest and related dependencies to fix GHSA-67mh-4wv8-2f99 vulnerability in esbuild",
+      "scope": {
+        "files": ["package.json", "package-lock.json"],
+        "packages": []
+      },
+      "risk": "low",
+      "estimated_effort_minutes": 10,
+      "verification_method": "npm audit shows no moderate+ vulnerabilities",
+      "dependencies": [],
+      "acceptance_criteria": [
+        "npm audit shows 0 moderate, high, or critical vulnerabilities",
+        "All tests still pass after upgrade",
+        "npm run build succeeds"
+      ]
+    },
+    {
+      "id": "ITEM-002",
+      "priority": "P0",
+      "category": "ci",
+      "title": "Add test coverage reporting to CI workflow",
+      "description": "Configure vitest to generate coverage reports and update CI to track coverage",
+      "scope": {
+        "files": ["vitest.config.ts", ".github/workflows/ci.yml"],
+        "packages": []
+      },
+      "risk": "low",
+      "estimated_effort_minutes": 15,
+      "verification_method": "CI generates and uploads coverage report",
+      "dependencies": ["ITEM-001"],
+      "acceptance_criteria": [
+        "Coverage report generated in CI",
+        "Coverage artifacts uploaded",
+        "Coverage threshold enforced at 70%"
+      ]
+    },
+    {
+      "id": "ITEM-003",
+      "priority": "P0",
+      "category": "security",
+      "title": "Add pre-commit configuration with secret scanning",
+      "description": "Create .pre-commit-config.yaml with gitleaks and other security hooks",
+      "scope": {
+        "files": [".pre-commit-config.yaml"],
+        "packages": []
+      },
+      "risk": "low",
+      "estimated_effort_minutes": 10,
+      "verification_method": "Pre-commit hooks run successfully and detect test secrets",
+      "dependencies": [],
+      "acceptance_criteria": [
+        ".pre-commit-config.yaml created with gitleaks",
+        "Pre-commit can be installed: pre-commit install",
+        "Test commit with fake secret is blocked"
+      ]
+    },
+    {
+      "id": "ITEM-004",
+      "priority": "P1",
+      "category": "ci",
+      "title": "Fix markdownlint to be blocking in CI",
+      "description": "Remove continue-on-error from markdownlint step and fix any linting issues",
+      "scope": {
+        "files": [".github/workflows/ci.yml", "README.md", "docs/*.md"],
+        "packages": []
+      },
+      "risk": "low",
+      "estimated_effort_minutes": 10,
+      "verification_method": "Markdown linting fails the build on violations",
+      "dependencies": [],
+      "acceptance_criteria": [
+        "continue-on-error removed from markdownlint steps",
+        "All markdown files pass linting",
+        "CI fails if markdownlint finds issues"
+      ]
+    },
+    {
+      "id": "ITEM-005",
+      "priority": "P1",
+      "category": "security",
+      "title": "Add SECURITY.md symlink to root",
+      "description": "Create symlink or copy SECURITY.md from .github/ to repository root for better GitHub integration",
+      "scope": {
+        "files": ["SECURITY.md"],
+        "packages": []
+      },
+      "risk": "low",
+      "estimated_effort_minutes": 5,
+      "verification_method": "GitHub shows security policy in Security tab",
+      "dependencies": [],
+      "acceptance_criteria": [
+        "SECURITY.md exists in repository root",
+        "GitHub recognizes security policy",
+        "Content matches .github/SECURITY.md"
+      ]
+    },
+    {
+      "id": "ITEM-006",
+      "priority": "P1",
+      "category": "dx",
+      "title": "Add .nvmrc for Node version management",
+      "description": "Create .nvmrc file specifying Node 20.x for consistent development environment",
+      "scope": {
+        "files": [".nvmrc"],
+        "packages": []
+      },
+      "risk": "low",
+      "estimated_effort_minutes": 5,
+      "verification_method": "nvm use succeeds and sets correct version",
+      "dependencies": [],
+      "acceptance_criteria": [
+        ".nvmrc file created with Node 20.x",
+        "nvm use works without errors",
+        "README updated to mention .nvmrc"
+      ]
+    }
+  ],
+  "selected_items": [
+    "ITEM-001",
+    "ITEM-003",
+    "ITEM-004",
+    "ITEM-005",
+    "ITEM-006"
+  ],
+  "execution_order": [
+    "ITEM-001",
+    "ITEM-003",
+    "ITEM-006",
+    "ITEM-005",
+    "ITEM-004"
+  ],
+  "risk_analysis": {
+    "breaking_changes_possible": false,
+    "requires_manual_review": false,
+    "rollback_complexity": "trivial",
+    "affected_packages": []
+  },
+  "estimated_effort": {
+    "total_minutes": 40,
+    "confidence": "high",
+    "breakdown": {
+      "security": 20,
+      "ci": 10,
+      "dx": 10
+    }
+  },
+  "rationale": "Selected 5 items totaling 40 minutes. Focused on security (P0) and CI improvements (P1). All items have low risk and clear verification methods. Dependency update is top priority due to vulnerability. Pre-commit adds security layer. Other items improve developer experience and CI quality."
+}

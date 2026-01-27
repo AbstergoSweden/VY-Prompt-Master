@@ -1,0 +1,9 @@
+{
+  "defaultProvider": "mock",
+  "defaultModel": "mock-model",
+  "maxIterations": 5,
+  "strictMode": true,
+  "verbose": false,
+  "yamlSizeLimit": 1048576,
+  "apiTimeout": 60000
+}

@@ -3,17 +3,105 @@
  * Implements policy router checks from the VY Unified Framework
  */
 
+import { sanitizeInput } from '../utils/security-utils.js';
 import type { VYPromptSpec, ValidationResult, ValidationError, ValidationWarning, PolicyClassification } from '../types.js';
+
+/**
+ * Enhanced normalization for text analysis with Unicode support
+ * Prevents homoglyph attacks and obfuscation
+ */
+export function normalizeText(text: string): string {
+    if (!text || typeof text !== 'string') {
+        return '';
+    }
+
+    // First apply comprehensive sanitization
+    const sanitized = sanitizeInput(text.toLowerCase());
+
+    // Then apply normalization for pattern matching
+    return sanitized
+        .replace(/\s+/g, '') // Remove all whitespace
+        .replace(/_/g, '') // Remove underscores
+        .replace(/[^\w\s]/g, '') // Remove punctuation
+        .replace(/0/g, 'o') // Replace zeros with o's
+        .replace(/1/g, 'i') // Replace ones with i's
+        .replace(/2/g, 'z') // Replace twos with z's
+        .replace(/3/g, 'e') // Replace threes with e's
+        .replace(/4/g, 'a') // Replace fours with a's
+        .replace(/5/g, 's') // Replace fives with s's
+        .replace(/6/g, 'g') // Replace sixes with g's
+        .replace(/7/g, 't') // Replace sevens with t's
+        .replace(/8/g, 'b') // Replace eights with b's
+        .replace(/9/g, 'g'); // Replace nines with g's
+}
+
+/**
+ * Detects and prevents homoglyph attacks
+ * Replaces visually similar Unicode characters with ASCII equivalents
+ * Comprehensive mapping for Cyrillic, Greek, and other homoglyphs
+ */
+export function detectHomoglyphs(text: string): string {
+    if (!text || typeof text !== 'string') {
+        return '';
+    }
+
+    // Apply NFKC normalization first to standardize character representations
+    // This converts compatibility characters to their canonical form
+    const normalized = text.normalize('NFKC').toLowerCase();
+
+    // Comprehensive homoglyph mapping
+    // Sources: Cyrillic, Greek, Latin look-alikes, fullwidth characters
+    const homoglyphMap: Record<string, string> = {
+        // Cyrillic letters that look like Latin
+        'а': 'a', 'о': 'o', 'е': 'e', 'с': 'c', 'р': 'p', 'у': 'y',
+        'и': 'i', 'м': 'm', 'н': 'n', 'к': 'k', 'в': 'b', 'з': 'z',
+        'д': 'd', 'ѕ': 's', 'ѵ': 'v',
+        // Cyrillic uppercase
+        'А': 'a', 'В': 'b', 'С': 'c', 'Е': 'e', 'Н': 'h', 'І': 'i',
+        'Ј': 'j', 'К': 'k', 'М': 'm', 'О': 'o', 'Р': 'p', 'Т': 't',
+        'Х': 'x', 'У': 'y',
+        // Greek letters
+        'α': 'a', 'β': 'b', 'ε': 'e', 'ο': 'o', 'ρ': 'p', 'σ': 's',
+        'υ': 'u', 'ν': 'v', 'γ': 'y', 'η': 'n', 'κ': 'k', 'μ': 'm',
+        'ω': 'w', 'τ': 't', 'χ': 'x',
+        // Greek uppercase
+        'Α': 'a', 'Β': 'b', 'Γ': 'g', 'Δ': 'd', 'Ε': 'e', 'Ζ': 'z',
+        'Η': 'h', 'Ι': 'i', 'Κ': 'k', 'Μ': 'm', 'Ν': 'n', 'Ο': 'o',
+        'Ρ': 'p', 'Τ': 't', 'Υ': 'y', 'Χ': 'x', 'Ω': 'o', // omega looks like o
+        // Latin look-alikes (already lowercased)
+        'ꜵ': 'a', '𝚊': 'a', // Mathematical alphanumeric symbols
+        // Fullwidth Latin letters
+        'ａ': 'a', 'ｂ': 'b', 'ｃ': 'c', 'ｄ': 'd', 'ｅ': 'e', 'ｆ': 'f',
+        'ｇ': 'g', 'ｈ': 'h', 'ｉ': 'i', 'ｊ': 'j', 'ｋ': 'k', 'ｌ': 'l',
+        'ｍ': 'm', 'ｎ': 'n', 'ｏ': 'o', 'ｐ': 'p', 'ｑ': 'q', 'ｒ': 'r',
+        'ｓ': 's', 'ｔ': 't', 'ｕ': 'u', 'ｖ': 'v', 'ｗ': 'w', 'ｘ': 'x',
+        'ｙ': 'y', 'ｚ': 'z',
+        // Zero-width and invisible characters (remove them)
+        '\u200b': '', // zero-width space
+        '\u200c': '', // zero-width non-joiner
+        '\u200d': '', // zero-width joiner
+        '\u2060': '', // word joiner
+        '\ufeff': '', // BOM
+    };
+
+    // Use manual character-by-character replacement for better Unicode handling
+    let result = '';
+    for (const char of normalized) {
+        result += char in homoglyphMap ? homoglyphMap[char] : char;
+    }
+
+    return result;
+}
 
 /** Disallowed content patterns per the VY Unified Framework */
 const DISALLOWED_PATTERNS = [
-    { pattern: /reverse\s*engineer/i, reason: 'Reverse engineering instructions are not permitted' },
-    { pattern: /competitor\s*build/i, reason: 'Competitor-building guidance is not permitted' },
+    { pattern: /reverseengineer/i, reason: 'Reverse engineering instructions are not permitted' },
+    { pattern: /competitorbuild/i, reason: 'Competitor-building guidance is not permitted' },
     { pattern: /jailbreak/i, reason: 'Jailbreak instructions are not permitted' },
-    { pattern: /bypass\s*(security|auth|filter|restriction)/i, reason: 'Bypass/evasion content is not permitted' },
-    { pattern: /credential\s*harvest/i, reason: 'Credential harvesting is not permitted' },
-    { pattern: /system\s*prompt/i, reason: 'System prompt disclosure is not permitted' },
-    { pattern: /password|secret|api[_\s]?key/i, reason: 'Credential handling should be manual, not automated' },
+    { pattern: /bypass(security|auth|filter|restriction)/i, reason: 'Bypass/evasion content is not permitted' },
+    { pattern: /credentialharvest/i, reason: 'Credential harvesting is not permitted' },
+    { pattern: /systemprompt/i, reason: 'System prompt disclosure is not permitted' },
+    { pattern: /password|secret|apikey/i, reason: 'Credential handling should be manual, not automated' },
 ];
 
 /** High-risk action keywords that require confirmation */
@@ -23,6 +111,9 @@ const HIGH_RISK_KEYWORDS = [
     'pay', 'purchase', 'buy', 'transfer', 'transaction',
     'uninstall', 'terminate', 'shutdown', 'disable',
 ];
+
+/** Normalized high-risk action keywords for obfuscation detection */
+const NORMALIZED_HIGH_RISK_KEYWORDS = HIGH_RISK_KEYWORDS.map(kw => normalizeText(kw));
 
 /**
  * Classifies a task description according to the policy router
@@ -34,23 +125,44 @@ export function classifyRequest(taskDescription: string): {
     reason?: string;
     inputsMissing?: string[];
 } {
-    const lowerDesc = taskDescription.toLowerCase();
+    if (!taskDescription || typeof taskDescription !== 'string') {
+        return {
+            classification: 'ambiguous',
+            reason: 'Invalid or empty task description',
+            inputsMissing: ['valid_task_description'],
+        };
+    }
 
-    // Check for disallowed content
+    // Apply comprehensive sanitization first
+    const sanitizedDesc = sanitizeInput(taskDescription);
+
+    // Apply homoglyph detection (combats visual spoofing)
+    const homoglyphSafeDesc = detectHomoglyphs(sanitizedDesc);
+
+    // Normalize the input to detect obfuscated content
+    const normalizedDesc = normalizeText(homoglyphSafeDesc);
+
+    // Check for disallowed content using normalized text
     for (const { pattern, reason } of DISALLOWED_PATTERNS) {
-        if (pattern.test(taskDescription)) {
+        // Test against both original normalized and homoglyph-safe text
+        if (pattern.test(normalizedDesc) || pattern.test(homoglyphSafeDesc)) {
             return { classification: 'disallowed', reason };
         }
     }
 
-    // Check for high-risk irreversible actions
-    const hasHighRiskKeyword = HIGH_RISK_KEYWORDS.some(keyword => lowerDesc.includes(keyword));
+    // Also check the original text for high-risk keywords
+    const lowerDesc = sanitizedDesc.toLowerCase();
+    const hasHighRiskKeyword = HIGH_RISK_KEYWORDS.some(keyword =>
+        lowerDesc.includes(keyword)
+    ) || NORMALIZED_HIGH_RISK_KEYWORDS.some(normalizedKeyword =>
+        normalizedDesc.includes(normalizedKeyword)
+    );
     if (hasHighRiskKeyword) {
         return { classification: 'high_risk_irreversible' };
     }
 
     // Check for ambiguous/incomplete requests
-    if (taskDescription.trim().length < 10) {
+    if (sanitizedDesc.trim().length < 10) {
         return {
             classification: 'ambiguous',
             inputsMissing: ['target_application', 'desired_end_state'],

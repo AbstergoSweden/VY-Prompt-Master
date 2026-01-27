@@ -4,6 +4,7 @@
 
 import OpenAI from 'openai';
 import type { AIAdapter, AIAdapterConfig, AIMessage, AIResponse } from './base.js';
+import { withRetry, classifyNetworkError } from '../../utils/network-utils.js';
 
 export class OpenAIAdapter implements AIAdapter {
     readonly name = 'openai';
@@ -25,21 +26,60 @@ export class OpenAIAdapter implements AIAdapter {
             content: m.content,
         }));
 
-        const response = await this.client.chat.completions.create({
-            model: this.model,
-            messages: openaiMessages,
-            max_tokens: this.maxTokens,
-        });
+        try {
+            // Wrap API call with retry logic for transient network errors
+            const response = await withRetry(
+                () => this.client.chat.completions.create({
+                    model: this.model,
+                    messages: openaiMessages,
+                    max_tokens: this.maxTokens,
+                }),
+                `OpenAI ${this.model} completion`,
+                {
+                    maxRetries: 3,
+                    initialDelayMs: 1000,
+                    retryableStatusCodes: [408, 429, 500, 502, 503, 504],
+                }
+            );
 
-        const content = response.choices[0]?.message?.content || '';
+            const content = response.choices[0]?.message?.content || '';
 
-        return {
-            content,
-            model: response.model,
-            usage: response.usage ? {
-                inputTokens: response.usage.prompt_tokens,
-                outputTokens: response.usage.completion_tokens,
-            } : undefined,
-        };
+            return {
+                content,
+                model: response.model,
+                usage: response.usage ? {
+                    inputTokens: response.usage.prompt_tokens,
+                    outputTokens: response.usage.completion_tokens,
+                } : undefined,
+            };
+        } catch (error) {
+            // Use the network error classifier for better error messages
+            const classifiedError = classifyNetworkError(error);
+            
+            // Handle specific OpenAI API errors
+            if (error instanceof OpenAI.APIError) {
+                // Handle rate limiting
+                if (error.status === 429) {
+                    throw new Error('Rate limit exceeded. Please try again later.');
+                }
+
+                // Handle authentication errors
+                if (error.status === 401) {
+                    throw new Error('Authentication failed. Please check your API key.');
+                }
+
+                // Handle other API errors
+                // Don't expose raw error details that might contain API keys
+                throw new Error(`OpenAI API request failed after ${classifiedError.isRetryable ? 'retries' : 'attempt'}: ${classifiedError.type}`);
+            }
+
+            // Handle generic errors with classification
+            if (error instanceof Error) {
+                // Don't expose the raw error which might contain API key info
+                throw new Error(`AI service request failed: ${classifiedError.type} - ${classifiedError.message}`);
+            } else {
+                throw new Error('AI service request failed due to an unknown error');
+            }
+        }
     }
 }
