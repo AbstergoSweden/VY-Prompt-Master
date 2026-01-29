@@ -11,12 +11,15 @@
 
 ![VY Prompt Master](https://github.com/user-attachments/assets/64d110ca-e90d-4e7d-a821-13ff3b93162b)
 
-**[📖 Documentation](docs/ABOUT.md)** | **[⚡ Quick Start](docs/QUICK-REFERENCE.md)** | **[🐛 Issues](docs/TODO-MASTER.md)** | **[🤝 Contributing](legal/CONTRIBUTING.md)**
+**[📖 Documentation](docs/ABOUT.md)** |
+**[⚡ Quick Start](docs/QUICK-REFERENCE.md)** |
+**[🐛 Issues](docs/TODO-MASTER.md)** |
+**[🤝 Contributing](legal/CONTRIBUTING.md)**
 
 </div>
 
 > **A comprehensive prompt engineering framework for safe, deterministic AI automation.**
-> 
+>
 > **Authors**: [Faye Hakansdotter](https://github.com/Fayeblade1488) and [AbstergoSweden](https://github.com/AbstergoSweden)
 
 ---
@@ -37,7 +40,8 @@
 
 ## Overview
 
-**VY Prompt Master** is a production-ready framework for generating VY (Vercept) automation prompt specifications. It transforms high-level task descriptions into detailed, executable YAML specs that ensure:
+**VY Prompt Master** is a production-ready framework for generating VY (Vercept) automation prompt specifications.
+It transforms high-level task descriptions into detailed, executable YAML specs that ensure:
 
 | Feature | Description |
 | --------- | ------------- |
@@ -58,7 +62,8 @@ Every step follows the pattern: `locate → confirm_target → act → verify_ou
 
 ### 1. Use the AI Review Prompt
 
-Copy the system message from [`docs/ai-review-prompt.md`](docs/ai-review-prompt.md) to your AI. For provider-specific instructions, see the [`providers/`](providers/) directory.
+Copy the system message from [`docs/ai-review-prompt.md`](docs/ai-review-prompt.md) to your AI.
+For provider-specific instructions, see the [`providers/`](providers/) directory.
 
 ### 2. Provide a Task Description
 
@@ -138,10 +143,12 @@ npm run generate -- --iterations 5 "Your task here"
 ### Configuration
 
 You can customize the default behavior by creating a configuration file:
+
 - `vy.config.json`
 - `.vyrc.json`
 
 Example configuration:
+
 ```json
 {
   "defaultProvider": "anthropic",
