@@ -4,7 +4,7 @@
  * to generate safe, deterministic VY automation prompts.
  */
 
-import { readFileSync, statSync } from 'fs';
+import { readFile, stat } from 'fs/promises';
 import { fileURLToPath } from 'url';
 import { dirname, join } from 'path';
 import type { AIAdapter, AIMessage } from './ai-adapters/index.js';
@@ -19,11 +19,11 @@ const frameworkCache = {
 };
 
 /** Loads the VY Unified Framework v3 (authoritative single source of truth) */
-function loadFramework(): string {
+async function loadFramework(): Promise<string> {
     const frameworkPath = join(__dirname, '../../framework/VY-Unified-Framework-v3.yaml');
 
     // Check if we have a cached version and if the file has been modified
-    const stats = statSync(frameworkPath);
+    const stats = await stat(frameworkPath);
     const currentModified = stats.mtimeMs;
 
     if (frameworkCache.content && frameworkCache.lastModified === currentModified) {
@@ -32,15 +32,15 @@ function loadFramework(): string {
     }
 
     // Load fresh content
-    frameworkCache.content = readFileSync(frameworkPath, 'utf-8');
+    frameworkCache.content = await readFile(frameworkPath, 'utf-8');
     frameworkCache.lastModified = currentModified;
 
     return frameworkCache.content;
 }
 
 /** Builds the system prompt from the unified framework */
-function buildSystemPrompt(): string {
-    const framework = loadFramework();
+async function buildSystemPrompt(): Promise<string> {
+    const framework = await loadFramework();
 
     return `You are the VY Prompt Engineering Agent. Your role is to generate safe, deterministic, and robust UI automation prompts for VY (Vercept) agent on macOS.
 
@@ -91,7 +91,7 @@ export async function generatePrompt(
     taskDescription: string,
     options: GenerateOptions = {}
 ): Promise<string> {
-    const systemPrompt = buildSystemPrompt();
+    const systemPrompt = await buildSystemPrompt();
 
     const messages: AIMessage[] = [
         { role: 'system', content: systemPrompt },
