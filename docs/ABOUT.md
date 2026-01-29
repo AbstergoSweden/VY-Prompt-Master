@@ -77,7 +77,8 @@ This ensures no action proceeds without proper targeting, and no action complete
 
 ## Links
 
-- **Project Repository**: [github.com/Fayeblade1488/VY-Prompt-Master](https://github.com/Fayeblade1488/VY-Prompt-Master)
+- **Project Repository**:
+  [github.com/Fayeblade1488/VY-Prompt-Master](https://github.com/Fayeblade1488/VY-Prompt-Master)
 - **Collaborator**: [AbstergoSweden](https://github.com/AbstergoSweden)
 - **Vercept (Vy)**: [vercept.com](https://vercept.com/)
 - **Author**: Faye Håkansdotter

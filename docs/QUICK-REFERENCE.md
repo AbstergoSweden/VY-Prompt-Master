@@ -236,6 +236,7 @@ assumptions:
 ```
 
 **Mandatory Assumptions:**
+
 - vy_local_agent_presence
 - vy_ui_grounding_capability
 - macOS_environment_conventions
@@ -255,6 +256,7 @@ evidence_ledger:
 ```
 
 **Capture Timing:**
+
 - Before critical UI state changes
 - After every verify_outcome step
 - Before user confirmation prompts
