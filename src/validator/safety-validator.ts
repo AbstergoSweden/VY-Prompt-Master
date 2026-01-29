@@ -35,6 +35,41 @@ export function normalizeText(text: string): string {
         .replace(/9/g, 'g'); // Replace nines with g's
 }
 
+// Comprehensive homoglyph mapping
+// Sources: Cyrillic, Greek, Latin look-alikes, fullwidth characters
+const HOMOGLYPH_MAP: Record<string, string> = {
+    // Cyrillic letters that look like Latin
+    'а': 'a', 'о': 'o', 'е': 'e', 'с': 'c', 'р': 'p', 'у': 'y',
+    'и': 'i', 'м': 'm', 'н': 'n', 'к': 'k', 'в': 'b', 'з': 'z',
+    'д': 'd', 'ѕ': 's', 'ѵ': 'v',
+    // Cyrillic uppercase
+    'А': 'a', 'В': 'b', 'С': 'c', 'Е': 'e', 'Н': 'h', 'І': 'i',
+    'Ј': 'j', 'К': 'k', 'М': 'm', 'О': 'o', 'Р': 'p', 'Т': 't',
+    'Х': 'x', 'У': 'y',
+    // Greek letters
+    'α': 'a', 'β': 'b', 'ε': 'e', 'ο': 'o', 'ρ': 'p', 'σ': 's',
+    'υ': 'u', 'ν': 'v', 'γ': 'y', 'η': 'n', 'κ': 'k', 'μ': 'm',
+    'ω': 'w', 'τ': 't', 'χ': 'x',
+    // Greek uppercase
+    'Α': 'a', 'Β': 'b', 'Γ': 'g', 'Δ': 'd', 'Ε': 'e', 'Ζ': 'z',
+    'Η': 'h', 'Ι': 'i', 'Κ': 'k', 'Μ': 'm', 'Ν': 'n', 'Ο': 'o',
+    'Ρ': 'p', 'Τ': 't', 'Υ': 'y', 'Χ': 'x', 'Ω': 'o', // omega looks like o
+    // Latin look-alikes (already lowercased)
+    'ꜵ': 'a', '𝚊': 'a', // Mathematical alphanumeric symbols
+    // Fullwidth Latin letters
+    'ａ': 'a', 'ｂ': 'b', 'ｃ': 'c', 'ｄ': 'd', 'ｅ': 'e', 'ｆ': 'f',
+    'ｇ': 'g', 'ｈ': 'h', 'ｉ': 'i', 'ｊ': 'j', 'ｋ': 'k', 'ｌ': 'l',
+    'ｍ': 'm', 'ｎ': 'n', 'ｏ': 'o', 'ｐ': 'p', 'ｑ': 'q', 'ｒ': 'r',
+    'ｓ': 's', 'ｔ': 't', 'ｕ': 'u', 'ｖ': 'v', 'ｗ': 'w', 'ｘ': 'x',
+    'ｙ': 'y', 'ｚ': 'z',
+    // Zero-width and invisible characters (remove them)
+    '\u200b': '', // zero-width space
+    '\u200c': '', // zero-width non-joiner
+    '\u200d': '', // zero-width joiner
+    '\u2060': '', // word joiner
+    '\ufeff': '', // BOM
+};
+
 /**
  * Detects and prevents homoglyph attacks
  * Replaces visually similar Unicode characters with ASCII equivalents
@@ -49,45 +84,10 @@ export function detectHomoglyphs(text: string): string {
     // This converts compatibility characters to their canonical form
     const normalized = text.normalize('NFKC').toLowerCase();
 
-    // Comprehensive homoglyph mapping
-    // Sources: Cyrillic, Greek, Latin look-alikes, fullwidth characters
-    const homoglyphMap: Record<string, string> = {
-        // Cyrillic letters that look like Latin
-        'а': 'a', 'о': 'o', 'е': 'e', 'с': 'c', 'р': 'p', 'у': 'y',
-        'и': 'i', 'м': 'm', 'н': 'n', 'к': 'k', 'в': 'b', 'з': 'z',
-        'д': 'd', 'ѕ': 's', 'ѵ': 'v',
-        // Cyrillic uppercase
-        'А': 'a', 'В': 'b', 'С': 'c', 'Е': 'e', 'Н': 'h', 'І': 'i',
-        'Ј': 'j', 'К': 'k', 'М': 'm', 'О': 'o', 'Р': 'p', 'Т': 't',
-        'Х': 'x', 'У': 'y',
-        // Greek letters
-        'α': 'a', 'β': 'b', 'ε': 'e', 'ο': 'o', 'ρ': 'p', 'σ': 's',
-        'υ': 'u', 'ν': 'v', 'γ': 'y', 'η': 'n', 'κ': 'k', 'μ': 'm',
-        'ω': 'w', 'τ': 't', 'χ': 'x',
-        // Greek uppercase
-        'Α': 'a', 'Β': 'b', 'Γ': 'g', 'Δ': 'd', 'Ε': 'e', 'Ζ': 'z',
-        'Η': 'h', 'Ι': 'i', 'Κ': 'k', 'Μ': 'm', 'Ν': 'n', 'Ο': 'o',
-        'Ρ': 'p', 'Τ': 't', 'Υ': 'y', 'Χ': 'x', 'Ω': 'o', // omega looks like o
-        // Latin look-alikes (already lowercased)
-        'ꜵ': 'a', '𝚊': 'a', // Mathematical alphanumeric symbols
-        // Fullwidth Latin letters
-        'ａ': 'a', 'ｂ': 'b', 'ｃ': 'c', 'ｄ': 'd', 'ｅ': 'e', 'ｆ': 'f',
-        'ｇ': 'g', 'ｈ': 'h', 'ｉ': 'i', 'ｊ': 'j', 'ｋ': 'k', 'ｌ': 'l',
-        'ｍ': 'm', 'ｎ': 'n', 'ｏ': 'o', 'ｐ': 'p', 'ｑ': 'q', 'ｒ': 'r',
-        'ｓ': 's', 'ｔ': 't', 'ｕ': 'u', 'ｖ': 'v', 'ｗ': 'w', 'ｘ': 'x',
-        'ｙ': 'y', 'ｚ': 'z',
-        // Zero-width and invisible characters (remove them)
-        '\u200b': '', // zero-width space
-        '\u200c': '', // zero-width non-joiner
-        '\u200d': '', // zero-width joiner
-        '\u2060': '', // word joiner
-        '\ufeff': '', // BOM
-    };
-
     // Use manual character-by-character replacement for better Unicode handling
     let result = '';
     for (const char of normalized) {
-        result += char in homoglyphMap ? homoglyphMap[char] : char;
+        result += char in HOMOGLYPH_MAP ? HOMOGLYPH_MAP[char] : char;
     }
 
     return result;
