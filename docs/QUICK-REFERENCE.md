@@ -2,7 +2,9 @@
 
 ## Overview
 
-The **VY Meta Prompt** is a unified framework that consolidates all VY (Vercept) automation best practices into a single, streamlined specification for generating safe, deterministic, and robust UI automation prompts.
+The **VY Meta Prompt** is a unified framework that consolidates all VY (Vercept) automation best
+practices into a single, streamlined specification for generating safe, deterministic, and robust
+UI automation prompts.
 
 **Version:** 2.0  
 **Date:** 2026.01.16  
@@ -294,12 +296,12 @@ purpose: "Extract data from website"
 ```yaml
 # DON'T: Include preamble
 Here is the prompt specification:
+```
 
 ```yaml
 ---
 identity: "VY Task Executor"
 # ...
-```
 ```
 
 ---
