@@ -6,7 +6,8 @@
 
 ## Overview
 
-The VY Prompt Master workflow transforms high-level user task descriptions into detailed, executable YAML specifications that Vy can safely and deterministically execute on macOS.
+The VY Prompt Master workflow transforms high-level user task descriptions into detailed, executable
+YAML specifications that Vy can safely and deterministically execute on macOS.
 
 ```text
 User Request → Classification → Planning → YAML Generation → Validation → Execution

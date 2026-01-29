@@ -6,7 +6,9 @@
 
 ## What is VY Prompt Master?
 
-**VY Prompt Master** is a prompt engineering framework designed for [Vy (Vercept)](https://vercept.com/) – an AI-powered macOS automation agent. It transforms high-level user task descriptions into detailed, executable YAML specifications that Vy can safely and predictably carry out.
+**VY Prompt Master** is a prompt engineering framework designed for [Vy (Vercept)](https://vercept.com/)
+– an AI-powered macOS automation agent. It transforms high-level user task descriptions into detailed,
+executable YAML specifications that Vy can safely and predictably carry out.
 
 ---
 
@@ -19,7 +21,8 @@ Modern AI agents can perform complex computer tasks, but without proper structur
 - **Debugging difficulties** – Hard to trace what went wrong
 - **Hallucination** – Claiming completion without verification
 
-VY Prompt Master solves these problems by enforcing a rigorous specification format where every action is:
+VY Prompt Master solves these problems by enforcing a rigorous specification format where every
+action is:
 
 - **Grounded in UI** – Tied to visible elements, not abstract concepts
 - **Verified** – Every action has observable success criteria
