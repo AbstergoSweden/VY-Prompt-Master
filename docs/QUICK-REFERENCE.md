@@ -1,10 +1,13 @@
 # VY Meta Prompt - Quick Reference Guide
 
 ## Overview
-The **VY Meta Prompt** is a unified framework that consolidates all VY (Vercept) automation best practices into a single, streamlined specification for generating safe, deterministic, and robust UI automation prompts.
 
-**Version:** 2.0  
-**Date:** 2026.01.16  
+The **VY Meta Prompt** is a unified framework that consolidates all VY (Vercept) automation best
+practices into a single, streamlined specification for generating safe, deterministic, and robust
+UI automation prompts.
+
+**Version:** 2.0
+**Date:** 2026.01.16
 **Purpose:** Single-source-of-truth for VY prompt engineering
 
 ---
@@ -12,7 +15,8 @@ The **VY Meta Prompt** is a unified framework that consolidates all VY (Vercept)
 ## Quick Start: 5-Phase Workflow
 
 ### Phase 1: Intake & Classification
-```
+
+```text
 1. Receive user task description
 2. Classify via policy_router: allowed / disallowed / ambiguous / high_risk_irreversible
 3. Route appropriately:
@@ -23,7 +27,8 @@ The **VY Meta Prompt** is a unified framework that consolidates all VY (Vercept)
 ```
 
 ### Phase 2: Planning
-```
+
+```text
 1. Draft 2-3 internal approaches
 2. Evaluate: safety, reliability, reversibility, efficiency
 3. Decompose into UI action primitives (8-field steps)
@@ -32,7 +37,8 @@ The **VY Meta Prompt** is a unified framework that consolidates all VY (Vercept)
 ```
 
 ### Phase 3: Specification Generation
-```
+
+```text
 1. Use the standardized template structure
 2. Include all required keys (identity, purpose, context, inputs, task, constraints, output_format, self_check)
 3. Add assumption_ledger for non-blocking unknowns
@@ -42,7 +48,8 @@ The **VY Meta Prompt** is a unified framework that consolidates all VY (Vercept)
 ```
 
 ### Phase 4: Validation
-```
+
+```text
 Run all four validation categories:
 
 ✓ Schema Tests: All required keys present, correct types
@@ -54,7 +61,8 @@ Execute self_check questions (all 10 must pass)
 ```
 
 ### Phase 5: Output
-```
+
+```text
 If inputs_missing → output ONLY inputs_missing YAML list
 If validation fails → return to planning with issues
 If validation passes → emit pure YAML only (no preamble, commentary, code fences)
@@ -93,7 +101,8 @@ Every step **MUST** include these fields:
 
 ## Critical Rules
 
-### ✅ DO:
+### ✅ DO
+
 - **ALWAYS** use locate→confirm→act→verify pattern
 - **ALWAYS** provide fallback paths for critical steps
 - **ALWAYS** document assumptions in assumption_ledger
@@ -103,7 +112,8 @@ Every step **MUST** include these fields:
 - **ALWAYS** use unique UI identifiers (button text, field labels)
 - **ALWAYS** capture observable evidence for verification
 
-### ❌ NEVER:
+### ❌ NEVER
+
 - **NEVER** claim tool access ("I clicked X") - only instruct ("VY should click X")
 - **NEVER** use vague references ("the button", "the field")
 - **NEVER** skip verify_outcome steps
@@ -119,6 +129,7 @@ Every step **MUST** include these fields:
 ## Platform-Specific Conventions
 
 ### macOS
+
 - **Keyboard:** Use Command (cmd) key, NOT Control (ctrl)
 - **Launch Apps:** Use `open_application` tool, NOT clicking Dock
 - **File Operations:** Use Finder integration tools
@@ -126,6 +137,7 @@ Every step **MUST** include these fields:
 - **Paths:** Use tilde (~) for home directory
 
 ### Web Automation
+
 - **Navigation:** Use `open_url` tool, NOT typing in address bar
 - **Google:** Use `google_search` tool directly
 - **Forms:** ALWAYS erase pre-existing text before typing
@@ -139,30 +151,38 @@ Every step **MUST** include these fields:
 ## Failure Playbooks
 
 ### 1. ui_not_found
-**Detection:** Element not found after 2 attempts  
+
+**Detection:** Element not found after 2 attempts
 **Response:**
+
 1. Execute fallback_paths in priority order
 2. Attempt search within app/menu
 3. Reposition mouse and retry
 4. Capture screenshot → request user clarification
 
 ### 2. unexpected_modal
-**Detection:** Modal interrupts workflow  
+
+**Detection:** Modal interrupts workflow
 **Response:**
+
 1. Identify title and button labels
 2. Prefer cancel/close unless required
 3. If destructive wording → require user confirmation
 
 ### 3. auth_blocked
-**Detection:** Login prompt or session expiration  
+
+**Detection:** Login prompt or session expiration
 **Response:**
+
 1. Halt automation immediately
 2. Request manual login: "Authentication required. Please log in manually to proceed."
 3. Resume from last checkpoint after confirmation
 
 ### 4. verification_failed
-**Detection:** verify_outcome not met  
+
+**Detection:** verify_outcome not met
 **Response:**
+
 1. Wait 250ms and retry
 2. Check for modals/notifications
 3. Re-locate element
@@ -173,11 +193,14 @@ Every step **MUST** include these fields:
 ## Validation Tests Checklist
 
 ### Schema Tests
-- [ ] All 8 required keys present (identity, purpose, context, inputs, task, constraints, output_format, self_check)
+
+- [ ] All 8 required keys present (identity, purpose, context, inputs, task, constraints,
+  output_format, self_check)
 - [ ] No unknown top-level keys
 - [ ] Correct data types (lists for steps, strings for identity, etc.)
 
 ### UI Tests
+
 - [ ] Every action step has locate + confirm_target + verify_outcome
 - [ ] locate uses unique identifiers (button text, field label, etc.)
 - [ ] All irreversible steps have safety_gate == irreversible_requires_confirmation
@@ -185,12 +208,14 @@ Every step **MUST** include these fields:
 - [ ] Critical steps have fallback paths
 
 ### Safety Tests
+
 - [ ] No bypass/jailbreak/evasion content
 - [ ] No credential harvesting or secret collection
 - [ ] Manual authentication specified if needed
 - [ ] User confirmation required for destructive actions
 
 ### Determinism Tests
+
 - [ ] No claims of completed actions (only instructions)
 - [ ] No vague verbs ('handle it', 'process it')
 - [ ] Concrete actions with exact parameters
@@ -211,6 +236,7 @@ assumptions:
 ```
 
 **Mandatory Assumptions:**
+
 - vy_local_agent_presence
 - vy_ui_grounding_capability
 - macOS_environment_conventions
@@ -230,6 +256,7 @@ evidence_ledger:
 ```
 
 **Capture Timing:**
+
 - Before critical UI state changes
 - After every verify_outcome step
 - Before user confirmation prompts
@@ -256,6 +283,7 @@ evidence_ledger:
 **Determinism:** Avoid ambiguous language, use enumerated steps and observable evidence
 
 ### ✅ Valid Output
+
 ```yaml
 ---
 identity: "VY Task Executor"
@@ -264,6 +292,7 @@ purpose: "Extract data from website"
 ```
 
 ### ❌ Invalid Output
+
 ```yaml
 # DON'T: Include preamble
 Here is the prompt specification:
@@ -280,6 +309,7 @@ identity: "VY Task Executor"
 ## Common Patterns
 
 ### Multi-Phase Workflow
+
 ```yaml
 task:
   goal: "Complete complex data entry task"
@@ -297,6 +327,7 @@ task:
 ```
 
 ### Conditional Branching
+
 ```yaml
 - step_id: "decision_001"
   intent: "Check if user is logged in"
