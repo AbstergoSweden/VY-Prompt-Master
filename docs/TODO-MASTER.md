@@ -141,12 +141,12 @@
 - **Remediation**: Cache compiled schema globally
 - **Impact**: 40-60% performance improvement expected
 
-#### 12. [MEDIUM] Framework Loaded Per-Request
+#### 12. [COMPLETED] Framework Caching
 
 - **File**: `src/generator/prompt-generator.ts`
-- **Issue**: Framework YAML loaded repeatedly
-- **Remediation**: Cache after first load
-- **Impact**: 25-30% generation time improvement
+- **Status**: ✅ Implemented with modification time checking
+- **Implementation**: Global `frameworkCache` with `mtimeMs` validation
+- **Impact**: Framework only reloaded when file modified on disk
 
 #### 13. [MEDIUM] No Streaming Support for Large Files
 
