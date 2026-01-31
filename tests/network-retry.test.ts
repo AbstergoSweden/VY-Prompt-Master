@@ -21,7 +21,7 @@ describe('Network Retry Logic Tests', () => {
         it('should succeed on first attempt', async () => {
             const operation = vi.fn().mockResolvedValue('success');
             const result = await withRetry(operation, 'test-operation');
-            
+
             expect(result).toBe('success');
             expect(operation).toHaveBeenCalledTimes(1);
         });
@@ -32,14 +32,14 @@ describe('Network Retry Logic Tests', () => {
                 .mockRejectedValueOnce(new Error('socket hang up'))
                 .mockResolvedValue('success');
 
-            const promise = withRetry(operation, 'test-operation', { 
-                maxRetries: 3, 
-                initialDelayMs: 1000 
+            const promise = withRetry(operation, 'test-operation', {
+                maxRetries: 3,
+                initialDelayMs: 1000
             });
 
             // Fast-forward through retry delays
             await vi.runAllTimersAsync();
-            
+
             const result = await promise;
             expect(result).toBe('success');
             expect(operation).toHaveBeenCalledTimes(3);
@@ -49,43 +49,46 @@ describe('Network Retry Logic Tests', () => {
             const error = new Error('ECONNREFUSED: Connection refused');
             const operation = vi.fn().mockRejectedValue(error);
 
-            const promise = withRetry(operation, 'test-operation', { 
-                maxRetries: 2, 
-                initialDelayMs: 100 
+            const promise = withRetry(operation, 'test-operation', {
+                maxRetries: 2,
+                initialDelayMs: 100
             });
+
+            // Attach expectation before running timers to avoid unhandled rejection
+            const expectation = expect(promise).rejects.toThrow('ECONNREFUSED: Connection refused');
 
             // Fast-forward through all retry delays
             await vi.runAllTimersAsync();
 
-            await expect(promise).rejects.toThrow('ECONNREFUSED: Connection refused');
+            await expectation;
             expect(operation).toHaveBeenCalledTimes(3); // Initial + 2 retries
         });
 
         it('should not retry non-retryable errors', async () => {
-            const error = new Error('Authentication failed');
+            const error: any = new Error('Authentication failed');
             error.status = 401;
             const operation = vi.fn().mockRejectedValue(error);
 
             const promise = withRetry(operation, 'test-operation', { maxRetries: 3 });
-            
+
             await expect(promise).rejects.toThrow('Authentication failed');
             expect(operation).toHaveBeenCalledTimes(1); // No retries
         });
 
         it('should retry on 503 Service Unavailable', async () => {
-            const error = new Error('Service Unavailable');
+            const error: any = new Error('Service Unavailable');
             error.status = 503;
             const operation = vi.fn()
                 .mockRejectedValueOnce(error)
                 .mockResolvedValue('success');
 
-            const promise = withRetry(operation, 'test-operation', { 
-                maxRetries: 2, 
-                initialDelayMs: 100 
+            const promise = withRetry(operation, 'test-operation', {
+                maxRetries: 2,
+                initialDelayMs: 100
             });
 
             await vi.runAllTimersAsync();
-            
+
             const result = await promise;
             expect(result).toBe('success');
             expect(operation).toHaveBeenCalledTimes(2);
@@ -98,15 +101,15 @@ describe('Network Retry Logic Tests', () => {
                 .mockRejectedValueOnce(new Error('ECONNRESET'))
                 .mockResolvedValue('success');
 
-            const promise = withRetry(operation, 'test-operation', { 
-                maxRetries: 3, 
+            const promise = withRetry(operation, 'test-operation', {
+                maxRetries: 3,
                 initialDelayMs: 100,
-                backoffMultiplier: 2 
+                backoffMultiplier: 2
             });
 
             // Fast-forward through all retries
             await vi.runAllTimersAsync();
-            
+
             const result = await promise;
             expect(result).toBe('success');
             expect(operation).toHaveBeenCalledTimes(4);
@@ -119,15 +122,15 @@ describe('Network Retry Logic Tests', () => {
                 .mockRejectedValueOnce(new Error('timeout'))
                 .mockResolvedValue('success');
 
-            const promise = withRetry(operation, 'test-operation', { 
-                maxRetries: 3, 
+            const promise = withRetry(operation, 'test-operation', {
+                maxRetries: 3,
                 initialDelayMs: 1000,
                 backoffMultiplier: 10, // Large multiplier to hit max cap
                 maxDelayMs: 5000
             });
 
             await vi.runAllTimersAsync();
-            
+
             const result = await promise;
             expect(result).toBe('success');
             expect(operation).toHaveBeenCalledTimes(4);
@@ -146,13 +149,13 @@ describe('Network Retry Logic Tests', () => {
                 .mockRejectedValueOnce(errors[2])
                 .mockResolvedValue('finally works');
 
-            const promise = withRetry(operation, 'dns-operation', { 
-                maxRetries: 5, 
-                initialDelayMs: 100 
+            const promise = withRetry(operation, 'dns-operation', {
+                maxRetries: 5,
+                initialDelayMs: 100
             });
 
             await vi.runAllTimersAsync();
-            
+
             const result = await promise;
             expect(result).toBe('finally works');
             expect(operation).toHaveBeenCalledTimes(4);
@@ -166,28 +169,28 @@ describe('Network Retry Logic Tests', () => {
             });
 
             const promise = withRetry(operation, 'test-operation', { maxRetries: 3 });
-            
+
             await expect(promise).rejects.toThrow('Operation was aborted');
             expect(operation).toHaveBeenCalledTimes(1); // No retry on abort
         });
 
         it('should implement custom retryable status codes', async () => {
             const config = { retryableStatusCodes: [408, 429, 500, 502, 503, 504] };
-            const error = new Error('Request Timeout');
+            const error: any = new Error('Request Timeout');
             error.status = 408;
-            
+
             const operation = vi.fn()
                 .mockRejectedValueOnce(error)
                 .mockResolvedValue('success');
 
-            const promise = withRetry(operation, 'test-operation', { 
-                ...config, 
-                maxRetries: 2, 
-                initialDelayMs: 100 
+            const promise = withRetry(operation, 'test-operation', {
+                ...config,
+                maxRetries: 2,
+                initialDelayMs: 100
             });
 
             await vi.runAllTimersAsync();
-            
+
             const result = await promise;
             expect(result).toBe('success');
             expect(operation).toHaveBeenCalledTimes(2);
@@ -198,7 +201,7 @@ describe('Network Retry Logic Tests', () => {
         it('should classify timeout errors', () => {
             const error = new Error('ETIMEDOUT: Connection timed out');
             const classified = classifyNetworkError(error);
-            
+
             expect(classified.type).toBe(NetworkErrorType.TIMEOUT);
             expect(classified.isRetryable).toBe(true);
         });
@@ -206,46 +209,46 @@ describe('Network Retry Logic Tests', () => {
         it('should classify connection errors', () => {
             const error = new Error('ECONNREFUSED: Connection refused');
             const classified = classifyNetworkError(error);
-            
+
             expect(classified.type).toBe(NetworkErrorType.CONNECTION);
             expect(classified.isRetryable).toBe(true);
         });
 
         it('should classify authentication errors', () => {
-            const error = new Error('Unauthorized');;
+            const error: any = new Error('Unauthorized');;
             error.status = 401;
             const classified = classifyNetworkError(error);
-            
+
             expect(classified.type).toBe(NetworkErrorType.AUTHENTICATION);
             expect(classified.isRetryable).toBe(false);
             expect(classified.statusCode).toBe(401);
         });
 
         it('should classify rate limit errors', () => {
-            const error = new Error('Rate limit exceeded');
+            const error: any = new Error('Rate limit exceeded');
             error.status = 429;
             const classified = classifyNetworkError(error);
-            
+
             expect(classified.type).toBe(NetworkErrorType.RATE_LIMIT);
             expect(classified.isRetryable).toBe(true);
             expect(classified.statusCode).toBe(429);
         });
 
         it('should classify server errors as retryable', () => {
-            const error = new Error('Internal Server Error');
+            const error: any = new Error('Internal Server Error');
             error.status = 500;
             const classified = classifyNetworkError(error);
-            
+
             expect(classified.type).toBe(NetworkErrorType.SERVER_ERROR);
             expect(classified.isRetryable).toBe(true);
             expect(classified.statusCode).toBe(500);
         });
 
         it('should classify client errors as non-retryable', () => {
-            const error = new Error('Bad Request');
+            const error: any = new Error('Bad Request');
             error.status = 400;
             const classified = classifyNetworkError(error);
-            
+
             expect(classified.type).toBe(NetworkErrorType.CLIENT_ERROR);
             expect(classified.isRetryable).toBe(false);
             expect(classified.statusCode).toBe(400);
@@ -254,7 +257,7 @@ describe('Network Retry Logic Tests', () => {
         it('should handle status codes via statusCode property', () => {
             const error = { message: 'Server Error', statusCode: 503 };
             const classified = classifyNetworkError(error);
-            
+
             expect(classified.type).toBe(NetworkErrorType.SERVER_ERROR);
             expect(classified.isRetryable).toBe(true);
             expect(classified.statusCode).toBe(503);
@@ -263,7 +266,7 @@ describe('Network Retry Logic Tests', () => {
         it('should handle unknown errors optimistically', () => {
             const error = new Error('Something strange happened');
             const classified = classifyNetworkError(error);
-            
+
             expect(classified.type).toBe(NetworkErrorType.UNKNOWN);
             expect(classified.isRetryable).toBe(true); // Optimistic default
         });

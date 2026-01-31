@@ -4,7 +4,7 @@
  */
 
 import { describe, it, expect } from 'vitest';
-import { redactSecrets } from '../dist/src/utils/security-utils.js';
+import { redactSecrets } from '../src/utils/security-utils.js';
 
 describe('API Key Redaction', () => {
     describe('redactSecrets', () => {
