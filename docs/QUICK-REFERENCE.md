@@ -1,6 +1,7 @@
 # VY Meta Prompt - Quick Reference Guide
 
-## Overview
+##
+ Overview
 
 The **VY Meta Prompt** is a unified framework that consolidates all VY (Vercept) automation best
 practices into a single, streamlined specification for generating safe, deterministic, and robust
@@ -16,7 +17,7 @@ UI automation prompts.
 
 ### Phase 1: Intake & Classification
 
-```text
+text
 1. Receive user task description
 2. Classify via policy_router: allowed / disallowed / ambiguous / high_risk_irreversible
 3. Route appropriately:
@@ -24,32 +25,32 @@ UI automation prompts.
    - ambiguous → inputs_missing list
    - high_risk → user confirmation checkpoint
    - allowed → proceed to planning
-```
+
 
 ### Phase 2: Planning
 
-```text
+text
 1. Draft 2-3 internal approaches
 2. Evaluate: safety, reliability, reversibility, efficiency
 3. Decompose into UI action primitives (8-field steps)
 4. Identify checkpoints and safety gates
 5. Document assumptions with mitigations
-```
+
 
 ### Phase 3: Specification Generation
 
-```text
+text
 1. Use the standardized template structure
 2. Include all required keys (identity, purpose, context, inputs, task, constraints, output_format, self_check)
 3. Add assumption_ledger for non-blocking unknowns
 4. Add evidence_ledger expectations
 5. Include failure_playbooks for common scenarios
 6. Add robustness_improvements (retries, rollbacks, monitoring)
-```
+
 
 ### Phase 4: Validation
 
-```text
+text
 Run all four validation categories:
 
 ✓ Schema Tests: All required keys present, correct types
@@ -58,15 +59,15 @@ Run all four validation categories:
 ✓ Determinism Tests: No completion claims, concrete actions only
 
 Execute self_check questions (all 10 must pass)
-```
+
 
 ### Phase 5: Output
 
-```text
+text
 If inputs_missing → output ONLY inputs_missing YAML list
 If validation fails → return to planning with issues
 If validation passes → emit pure YAML only (no preamble, commentary, code fences)
-```
+
 
 ---
 
@@ -225,7 +226,7 @@ Every step **MUST** include these fields:
 
 ## Assumption Ledger Template
 
-```yaml
+yaml
 assumptions:
   - id: "assumption_001"
     statement: "What we're assuming"
@@ -233,7 +234,7 @@ assumptions:
     risk: "What breaks if assumption is wrong"
     mitigation: "How to reduce risk"
     verification_method: "How to check the assumption"
-```
+
 
 **Mandatory Assumptions:**
 
@@ -246,14 +247,14 @@ assumptions:
 
 ## Evidence Ledger Template
 
-```yaml
+yaml
 # Internally tracked during execution
 evidence_ledger:
   - step_id: "step_001"
     what_observed: "Browser window appeared with Safari title bar"
     where_observed: "Foreground application window"
     why_it_matters: "Confirms browser launch success, ready for navigation"
-```
+
 
 **Capture Timing:**
 
@@ -284,25 +285,25 @@ evidence_ledger:
 
 ### ✅ Valid Output
 
-```yaml
+yaml
 ---
 identity: "VY Task Executor"
 purpose: "Extract data from website"
 # ... rest of valid YAML
-```
+
 
 ### ❌ Invalid Output
 
-```yaml
+yaml
 # DON'T: Include preamble
 Here is the prompt specification:
 
-```yaml
+yaml
 ---
 identity: "VY Task Executor"
 # ...
-```
-```
+
+
 
 ---
 
@@ -310,7 +311,7 @@ identity: "VY Task Executor"
 
 ### Multi-Phase Workflow
 
-```yaml
+yaml
 task:
   goal: "Complete complex data entry task"
   phases:
@@ -324,11 +325,11 @@ task:
       rollback: "undo_data_entry"
     - phase_id: "verification"
       steps: [...]
-```
+
 
 ### Conditional Branching
 
-```yaml
+yaml
 - step_id: "decision_001"
   intent: "Check if user is logged in"
   locate: "Top-right corner for user avatar or 'Sign In' button"
@@ -337,7 +338,7 @@ task:
       next_step: "step_010_proceed"
     - condition: "'Sign In' button visible"
       next_step: "step_005_request_login"
-```
+
 
 ---
 
