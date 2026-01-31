@@ -64,6 +64,7 @@ locate → confirm_target → act → verify_outcome
 
 This ensures no action proceeds without proper targeting, and no action completes without verification.
 
+
 ---
 
 ## Getting Started
