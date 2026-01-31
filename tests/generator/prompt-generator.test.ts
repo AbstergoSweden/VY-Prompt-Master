@@ -5,13 +5,14 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { generatePrompt, extractYaml } from '../../src/generator/prompt-generator.js';
 import type { AIAdapter, AIResponse } from '../../src/generator/ai-adapters/base.js';
+import type { Stats } from 'fs';
 
 // Mock fs/promises for framework loading
 vi.mock('fs/promises', async (importOriginal) => {
     const actual = await importOriginal<typeof import('fs/promises')>();
     return {
         ...actual,
-        readFile: vi.fn(async (path: string | Buffer | URL, options?: any) => {
+        readFile: vi.fn(async (path: string | Buffer | URL, options?: BufferEncoding | { encoding?: BufferEncoding | null; flag?: string }) => {
             const pathStr = String(path);
             if (pathStr.includes('VY-Unified-Framework-v3.yaml')) {
                 return `
@@ -23,9 +24,9 @@ core_philosophy: 'If VY cannot verify it, VY should not execute it'
             }
             return actual.readFile(path, options);
         }),
-        stat: vi.fn(async (path: string) => {
+        stat: vi.fn(async (_path: string) => {
             // Minimal mock for stat needed by loadFramework
-            return { mtimeMs: 12345 };
+            return { mtimeMs: 12345 } as Partial<Stats>;
         }),
     };
 });
