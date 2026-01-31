@@ -1,11 +1,10 @@
 # VY Meta Prompt - Quick Reference Guide
 
-##
- Overview
+## Overview
 
 The **VY Meta Prompt** is a unified framework that consolidates all VY (Vercept) automation best
-practices into a single, streamlined specification for generating safe, deterministic, and robust
-UI automation prompts.
+practices into a single, streamlined specification for generating safe, deterministic, and robust UI
+automation prompts.
 
 **Version:** 2.0
 **Date:** 2026.01.16
@@ -17,7 +16,7 @@ UI automation prompts.
 
 ### Phase 1: Intake & Classification
 
-text
+```text
 1. Receive user task description
 2. Classify via policy_router: allowed / disallowed / ambiguous / high_risk_irreversible
 3. Route appropriately:
@@ -25,49 +24,46 @@ text
    - ambiguous → inputs_missing list
    - high_risk → user confirmation checkpoint
    - allowed → proceed to planning
-
+```
 
 ### Phase 2: Planning
 
-text
+```text
 1. Draft 2-3 internal approaches
 2. Evaluate: safety, reliability, reversibility, efficiency
 3. Decompose into UI action primitives (8-field steps)
 4. Identify checkpoints and safety gates
 5. Document assumptions with mitigations
-
+```
 
 ### Phase 3: Specification Generation
 
-text
+```text
 1. Use the standardized template structure
-2. Include all required keys (identity, purpose, context, inputs, task, constraints, output_format, self_check)
+2. Include all required keys (identity, purpose, context, inputs, task, constraints, output_format,
+   self_check)
 3. Add assumption_ledger for non-blocking unknowns
 4. Add evidence_ledger expectations
 5. Include failure_playbooks for common scenarios
 6. Add robustness_improvements (retries, rollbacks, monitoring)
-
+```
 
 ### Phase 4: Validation
 
-text
 Run all four validation categories:
 
-✓ Schema Tests: All required keys present, correct types
-✓ UI Tests: locate+confirm+verify for every step, unique identifiers
-✓ Safety Tests: No disallowed content, no credential harvesting
-✓ Determinism Tests: No completion claims, concrete actions only
+- **Schema Tests**: All required keys present, correct types
+- **UI Tests**: locate+confirm+verify for every step, unique identifiers
+- **Safety Tests**: No disallowed content, no credential harvesting
+- **Determinism Tests**: No completion claims, concrete actions only
 
 Execute self_check questions (all 10 must pass)
 
-
 ### Phase 5: Output
 
-text
-If inputs_missing → output ONLY inputs_missing YAML list
+If `inputs_missing` → output ONLY `inputs_missing` YAML list
 If validation fails → return to planning with issues
 If validation passes → emit pure YAML only (no preamble, commentary, code fences)
-
 
 ---
 
@@ -76,7 +72,7 @@ If validation passes → emit pure YAML only (no preamble, commentary, code fenc
 Every step **MUST** include these fields:
 
 | Field | Description | Example |
-|-------|-------------|---------|
+| :--- | :--- | :--- |
 | **step_id** | Unique identifier | `step_001_launch_browser` |
 | **intent** | Single-sentence purpose | "Launch the user's default web browser" |
 | **locate** | Unambiguous UI element | "Visible 'Safari' icon in macOS Dock" |
@@ -93,7 +89,7 @@ Every step **MUST** include these fields:
 ## Safety Gate Levels
 
 | Level | When to Use | Confirmation Required? |
-|-------|-------------|----------------------|
+| :--- | :--- | :--- |
 | **safe** | Standard UI interactions, easily reversible | No |
 | **caution** | Moderate consequences, checkpoint recommended | Optional |
 | **irreversible_requires_confirmation** | Delete, send, pay, post, destructive actions | **YES - Explicit user confirmation** |
@@ -226,7 +222,7 @@ Every step **MUST** include these fields:
 
 ## Assumption Ledger Template
 
-yaml
+```yaml
 assumptions:
   - id: "assumption_001"
     statement: "What we're assuming"
@@ -234,7 +230,7 @@ assumptions:
     risk: "What breaks if assumption is wrong"
     mitigation: "How to reduce risk"
     verification_method: "How to check the assumption"
-
+```
 
 **Mandatory Assumptions:**
 
@@ -247,14 +243,14 @@ assumptions:
 
 ## Evidence Ledger Template
 
-yaml
+```yaml
 # Internally tracked during execution
 evidence_ledger:
   - step_id: "step_001"
     what_observed: "Browser window appeared with Safari title bar"
     where_observed: "Foreground application window"
     why_it_matters: "Confirms browser launch success, ready for navigation"
-
+```
 
 **Capture Timing:**
 
@@ -267,7 +263,7 @@ evidence_ledger:
 ## Complexity Thresholds
 
 | Actions | Workflow Type | TODO.md Required? |
-|---------|---------------|-------------------|
+| :--- | :--- | :--- |
 | ≤ 20 | Simple task | No - execute directly |
 | 21-100 | Complex task | Yes - checkpoint phases |
 | > 100 | Very complex | Yes - subtask checkpoints |
@@ -278,23 +274,23 @@ evidence_ledger:
 
 ## Output Contract
 
-**Format Rule:** Output ONLY valid YAML  
-**No Extras:** No preamble, no commentary, no quotes, no code fences  
-**Missing Info:** If details missing → output only inputs_missing YAML list  
+**Format Rule:** Output ONLY valid YAML
+**No Extras:** No preamble, no commentary, no quotes, no code fences
+**Missing Info:** If details missing → output only `inputs_missing` YAML list
 **Determinism:** Avoid ambiguous language, use enumerated steps and observable evidence
 
 ### ✅ Valid Output
 
-yaml
+```yaml
 ---
 identity: "VY Task Executor"
 purpose: "Extract data from website"
 # ... rest of valid YAML
-
+```
 
 ### ❌ Invalid Output
 
-yaml
+```yaml
 # DON'T: Include preamble
 Here is the prompt specification:
 
@@ -302,16 +298,13 @@ yaml
 ---
 identity: "VY Task Executor"
 # ...
-
-
-
----
+```
 
 ## Common Patterns
 
 ### Multi-Phase Workflow
 
-yaml
+```yaml
 task:
   goal: "Complete complex data entry task"
   phases:
@@ -325,11 +318,11 @@ task:
       rollback: "undo_data_entry"
     - phase_id: "verification"
       steps: [...]
-
+```
 
 ### Conditional Branching
 
-yaml
+```yaml
 - step_id: "decision_001"
   intent: "Check if user is logged in"
   locate: "Top-right corner for user avatar or 'Sign In' button"
@@ -338,7 +331,7 @@ yaml
       next_step: "step_010_proceed"
     - condition: "'Sign In' button visible"
       next_step: "step_005_request_login"
-
+```
 
 ---
 
@@ -377,7 +370,7 @@ yaml
 ## Quick Troubleshooting
 
 | Problem | Solution |
-|---------|----------|
+| :--- | :--- |
 | Can't locate element | Add fallback paths, use search, request screenshot |
 | Verification fails | Wait 250ms and retry, check for modals, re-locate element |
 | Tool execution error | Verify parameters, try alternative tool, fall back to UI |

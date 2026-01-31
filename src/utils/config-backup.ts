@@ -3,7 +3,8 @@
  * Handles automatic backups and recovery for corrupted configuration files
  */
 
-import { readFileSync, writeFileSync, existsSync, copyFileSync, mkdirSync } from 'fs';
+import { readFileSync, writeFileSync, existsSync, copyFileSync, mkdirSync, readdirSync, statSync, unlinkSync } from 'fs';
+import * as path from 'path';
 import { resolve, dirname } from 'path';
 
 export interface BackupResult {
@@ -18,6 +19,7 @@ export interface RecoveryResult {
   config?: any;
   source: 'original' | 'backup' | 'none';
   error?: string;
+  recoveredFrom?: string;
 }
 
 /**
@@ -38,7 +40,7 @@ function generateBackupPath(originalPath: string): string {
   const baseName = originalPath.substring(originalPath.lastIndexOf('/') + 1).replace(ext, '');
   const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
   const random = Math.random().toString(36).substring(2, 8); // Add randomness to prevent collisions
-  
+
   return resolve(dir, `.${baseName}.backup.${timestamp}-${random}${ext}`);
 }
 
@@ -58,16 +60,16 @@ export function createBackup(configPath: string): BackupResult {
 
     const backupPath = generateBackupPath(configPath);
     const backupDir = dirname(backupPath);
-    
+
     // Ensure backup directory exists
     ensureDir(backupDir);
-    
+
     // Create backup
     copyFileSync(configPath, backupPath);
-    
+
     // Clean up old backups (keep last 10)
     cleanupOldBackups(configPath, 10);
-    
+
     return {
       success: true,
       message: `Backup created successfully`,
@@ -91,21 +93,21 @@ function cleanupOldBackups(configPath: string, keepNumber: number): void {
     const dir = dirname(configPath);
     const baseName = configPath.substring(configPath.lastIndexOf('/') + 1).replace(/\.json$/, '');
     const backupPattern = new RegExp(`^\\.${baseName}\\.backup\\.[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}-[0-9]{2}-[0-9]{2}-[0-9]{3}Z-[a-z0-9]+\\.json$`);
-    
-    const files = require('fs').readdirSync(dir);
+
+    const files = readdirSync(dir);
     const backups = files
-      .filter(f => backupPattern.test(f))
-      .map(f => ({
+      .filter((f: string) => backupPattern.test(f))
+      .map((f: string) => ({
         name: f,
         path: resolve(dir, f),
-        stat: require('fs').statSync(resolve(dir, f)),
+        stat: statSync(resolve(dir, f)),
       }))
       .sort((a, b) => b.stat.mtime.getTime() - a.stat.mtime.getTime());
-    
+
     // Remove old backups beyond the keep limit
     for (let i = keepNumber; i < backups.length; i++) {
       try {
-        require('fs').unlinkSync(backups[i].path);
+        unlinkSync(backups[i].path);
       } catch (e) {
         // Ignore cleanup errors
       }
@@ -126,10 +128,10 @@ export function loadConfigWithBackup(configPath: string): RecoveryResult {
     try {
       const content = readFileSync(configPath, 'utf-8');
       const config = JSON.parse(content);
-      
+
       // Config loaded successfully, create a backup
       createBackup(configPath);
-      
+
       return {
         success: true,
         config,
@@ -137,13 +139,13 @@ export function loadConfigWithBackup(configPath: string): RecoveryResult {
       };
     } catch (error) {
       console.warn(`Config file ${configPath} is corrupted:`, error);
-      
+
       // Try to recover from backup
       const backupResult = recoverFromLatestBackup(configPath);
       if (backupResult.success) {
         return backupResult;
       }
-      
+
       return {
         success: false,
         source: 'none',
@@ -151,7 +153,7 @@ export function loadConfigWithBackup(configPath: string): RecoveryResult {
       };
     }
   }
-  
+
   // File doesn't exist, try to recover from backup
   const backupResult = recoverFromLatestBackup(configPath);
   if (backupResult.success) {
@@ -164,7 +166,7 @@ export function loadConfigWithBackup(configPath: string): RecoveryResult {
     }
     return backupResult;
   }
-  
+
   return {
     success: false,
     source: 'none',
@@ -182,7 +184,7 @@ function recoverFromLatestBackup(configPath: string): RecoveryResult {
     const dir = dirname(configPath);
     const baseName = configPath.substring(configPath.lastIndexOf('/') + 1).replace(/\.json$/, '');
     const backupPattern = new RegExp(`^\\.${baseName}\\.backup\\.[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}-[0-9]{2}-[0-9]{2}-[0-9]{3}Z-[a-z0-9]+\\.json$`);
-    
+
     if (!existsSync(dir)) {
       return {
         success: false,
@@ -190,17 +192,17 @@ function recoverFromLatestBackup(configPath: string): RecoveryResult {
         error: 'Backup directory does not exist',
       };
     }
-    
-    const files = require('fs').readdirSync(dir);
+
+    const files = readdirSync(dir);
     const backups = files
-      .filter(f => backupPattern.test(f))
-      .map(f => ({
+      .filter((f: string) => backupPattern.test(f))
+      .map((f: string) => ({
         name: f,
         path: resolve(dir, f),
-        stat: require('fs').statSync(resolve(dir, f)),
+        stat: statSync(resolve(dir, f)),
       }))
       .sort((a, b) => b.stat.mtime.getTime() - a.stat.mtime.getTime());
-    
+
     if (backups.length === 0) {
       return {
         success: false,
@@ -208,13 +210,13 @@ function recoverFromLatestBackup(configPath: string): RecoveryResult {
         error: 'No backups found',
       };
     }
-    
+
     // Try to load the most recent backup
     for (const backup of backups) {
       try {
         const content = readFileSync(backup.path, 'utf-8');
         const config = JSON.parse(content);
-        
+
         return {
           success: true,
           config,
@@ -226,7 +228,7 @@ function recoverFromLatestBackup(configPath: string): RecoveryResult {
         continue; // Try next backup
       }
     }
-    
+
     return {
       success: false,
       source: 'none',
@@ -260,24 +262,27 @@ export function listBackups(configPath: string): Array<{ path: string; date: Dat
     const dir = dirname(configPath);
     const baseName = configPath.substring(configPath.lastIndexOf('/') + 1).replace(/\.json$/, '');
     const backupPattern = new RegExp(`^\\.${baseName}\\.backup\\.[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}-[0-9]{2}-[0-9]{2}-[0-9]{3}Z-[a-z0-9]+\\.json$`);
-    
+
     if (!existsSync(dir)) {
       return [];
     }
-    
-    const files = require('fs').readdirSync(dir);
+
+    const files = readdirSync(dir);
     return files
-      .filter(f => backupPattern.test(f))
-      .map(f => {
+      .filter((f: string) => backupPattern.test(f))
+      .map((f: string) => {
         const path = resolve(dir, f);
-        const stat = require('fs').statSync(path);
+        const stat = statSync(path);
         return {
           path,
           date: stat.mtime,
           size: stat.size,
         };
       })
-      .sort((a, b) => b.date.getTime() - a.date.getTime());
+      .sort((a, b) => {
+        const timeDiff = b.date.getTime() - a.date.getTime();
+        return timeDiff !== 0 ? timeDiff : (path.basename(b.path).localeCompare(path.basename(a.path)));
+      });
   } catch (error) {
     return [];
   }

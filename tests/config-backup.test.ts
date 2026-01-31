@@ -142,11 +142,11 @@ describe('Config Backup and Recovery Tests', () => {
     it('should handle case when config and all backups are corrupted', () => {
       // Create config and backup
       writeFileSync(configPath, JSON.stringify({ test: 'data' }), 'utf-8');
-      
+
       // Create multiple backups to test corruption handling
-      const result1 = createBackup(configPath);
+      createBackup(configPath);
       writeFileSync(configPath, JSON.stringify({ test: 'data2' }), 'utf-8');
-      const result2 = createBackup(configPath);
+      createBackup(configPath);
 
       // Get all backup paths
       const allBackups = listBackups(configPath);
@@ -277,28 +277,28 @@ describe('Config Backup and Recovery Tests', () => {
       // Create first config version (older)
       const config1 = { good: 'config', version: 1 };
       writeFileSync(configPath, JSON.stringify(config1), 'utf-8');
-      
+
       // Create first backup (will be the older backup)
       createBackup(configPath);
-      
+
       // Create second config version (newer)
       const config2 = { good: 'config', version: 2 };
       writeFileSync(configPath, JSON.stringify(config2), 'utf-8');
-      
+
       // Create second backup (will be the newer backup)
       createBackup(configPath);
-      
+
       // Verify we have exactly 2 backups
       const backupsBefore = listBackups(configPath);
       expect(backupsBefore.length).toBe(2);
-      
+
       // Corrupt the original config
       writeFileSync(configPath, 'corrupted', 'utf-8');
-      
+
       // Corrupt the NEWEST backup (version 2)
       // Newest backup is backupsBefore[0] due to sort by mtime
       writeFileSync(backupsBefore[0].path, 'also corrupted', 'utf-8');
-      
+
       // Should recover from the older backup (version 1)
       const result = loadConfigWithBackup(configPath);
 

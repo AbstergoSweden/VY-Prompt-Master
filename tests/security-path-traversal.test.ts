@@ -6,7 +6,7 @@
 import { describe, it, expect, beforeEach, afterEach } from 'vitest';
 import { validatePath } from '../src/utils/security-utils.js';
 import { mkdtempSync, rmdirSync, symlinkSync, mkdirSync, writeFileSync, unlinkSync, existsSync, realpathSync } from 'fs';
-import { join, sep } from 'path';
+import { join } from 'path';
 import * as os from 'os';
 
 // Helper to create a temporary file path without requiring external packages
@@ -38,7 +38,7 @@ describe('Path Traversal Security Tests', () => {
             if (tempDir && existsSync(tempDir)) {
                 rmdirSync(tempDir, { recursive: true });
             }
-        } catch (e) {
+        } catch (_e) {
             // Ignore cleanup errors
         }
     });
@@ -100,11 +100,11 @@ describe('Path Traversal Security Tests', () => {
             // Create a symlink to a file outside tempDir
             const outsideFile = createTempFilePath();
             writeFileSync(outsideFile, 'outside content');
-            
+
             const symlinkPath = join(tempDir, 'outside-link.yaml');
             try {
                 symlinkSync(outsideFile, symlinkPath);
-                
+
                 expect(() => validatePath(symlinkPath, tempDir)).toThrow('Path traversal detected');
             } catch (e) {
                 // Skip if symlink creation fails (e.g., on Windows without permissions)
@@ -121,11 +121,11 @@ describe('Path Traversal Security Tests', () => {
         it('should accept symlinks within allowed base', () => {
             const targetFile = join(tempDir, 'target.yaml');
             writeFileSync(targetFile, 'target content');
-            
+
             const symlinkPath = join(tempDir, 'valid-link.yaml');
             try {
                 symlinkSync(targetFile, symlinkPath);
-                
+
                 const result = validatePath(symlinkPath, tempDir);
                 expect(result).toBeTruthy();
             } catch (e) {
@@ -137,10 +137,10 @@ describe('Path Traversal Security Tests', () => {
         it('should reject directory symlinks pointing outside allowed base', () => {
             const outsideDir = mkdtempSync(join(tmpdir(), 'vy-outside-test-'));
             const symlinkPath = join(tempDir, 'outside-dir-link');
-            
+
             try {
                 symlinkSync(outsideDir, symlinkPath, 'dir');
-                
+
                 expect(() => validatePath(symlinkPath, tempDir)).toThrow('Path traversal detected');
             } catch (e) {
                 console.log('Symlink test skipped:', (e as Error).message);
@@ -199,7 +199,7 @@ describe('Path Traversal Security Tests', () => {
 
         it('should reject non-string paths', () => {
             expect(() => validatePath(123 as any, tempDir)).toThrow('Invalid file path');
-            expect(() => validatePath({}, tempDir)).toThrow('Invalid file path');
+            expect(() => validatePath({} as any, tempDir)).toThrow('Invalid file path');
         });
 
         it('should handle paths with trailing slashes', () => {
@@ -225,10 +225,10 @@ describe('Path Traversal Security Tests', () => {
             // Test mixed case in filename (not directory path) since directory case must match on case-sensitive filesystems
             const mixedCaseFilename = 'TEST-CONFIG.YAML';
             const mixedCasePath = join(tempDir, mixedCaseFilename);
-            
+
             // Create the file with mixed case name
             writeFileSync(mixedCasePath, 'test');
-            
+
             // This should work regardless of filesystem case-sensitivity
             const result = validatePath(mixedCasePath, tempDir);
             expect(result).toBeTruthy();
@@ -240,11 +240,11 @@ describe('Path Traversal Security Tests', () => {
         it('should handle very deep but valid nested paths', () => {
             const deepPath = 'a/b/c/d/e/f/g/h/i/j/test.yaml';
             const fullPath = join(tempDir, deepPath);
-            
+
             // Create the nested directory structure
             let currentPath = tempDir;
             const parts = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j'];
-            
+
             for (const part of parts) {
                 currentPath = join(currentPath, part);
                 try {
@@ -253,9 +253,9 @@ describe('Path Traversal Security Tests', () => {
                     // Ignore if already exists
                 }
             }
-            
+
             writeFileSync(fullPath, 'deep content');
-            
+
             const result = validatePath(deepPath, tempDir);
             expect(result).toBeTruthy();
             expect(result).toContain('test.yaml');
@@ -273,7 +273,7 @@ describe('Path Traversal Security Tests', () => {
             mkdirSync(unicodeDir, { recursive: true });
             const unicodeFile = join(unicodeDir, 'test-ñ.yaml');
             writeFileSync(unicodeFile, 'test');
-            
+
             const result = validatePath('café-dir/test-ñ.yaml', tempDir);
             expect(result).toBeTruthy();
         });
