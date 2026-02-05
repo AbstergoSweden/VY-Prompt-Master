@@ -20,6 +20,9 @@ import type { ValidateFunction } from 'ajv';
 type AjvInstance = InstanceType<typeof Ajv>;
 type AjvErrorObject = { instancePath?: string; message?: string; keyword?: string };
 
+const DEFAULT_MAX_YAML_BYTES = 1024 * 100; // 100KB
+const DEFAULT_MAX_ALIAS_COUNT = 100;
+
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 
@@ -40,6 +43,43 @@ function formatAjvErrors(errors: AjvErrorObject[] | null | undefined): Validatio
         code: `SCHEMA_${err.keyword?.toUpperCase() || 'ERROR'}`,
         severity: 'error' as const,
     }));
+}
+
+function parseYamlWithLimits(yamlContent: string): { parsed: unknown | null; errors: ValidationError[] } {
+    // Check for potential YAML bombs or excessively large content
+    if (yamlContent.length > DEFAULT_MAX_YAML_BYTES) {
+        return {
+            parsed: null,
+            errors: [{
+                path: '/',
+                message: `YAML content exceeds maximum allowed size (${DEFAULT_MAX_YAML_BYTES} bytes)`,
+                code: 'YAML_SIZE_LIMIT_EXCEEDED',
+                severity: 'error',
+            }],
+        };
+    }
+
+    try {
+        return {
+            parsed: parseYaml(yamlContent, {
+                // Disable dangerous features that could lead to injection
+                schema: 'core', // Use only safe schema
+                maxAliasCount: DEFAULT_MAX_ALIAS_COUNT, // Prevent alias amplification
+            }),
+            errors: [],
+        };
+    } catch (err) {
+        const yamlError = err as Error;
+        return {
+            parsed: null,
+            errors: [{
+                path: '/',
+                message: `YAML parse error: ${yamlError.message}`,
+                code: 'YAML_PARSE_ERROR',
+                severity: 'error',
+            }],
+        };
+    }
 }
 
 /** Cached AJV instance and validator function */
@@ -89,42 +129,9 @@ export function clearSchemaCache(): void {
  * @returns ValidationResult with errors and warnings
  */
 export function validateSchema(yamlContent: string): ValidationResult {
-    const errors: ValidationError[] = [];
-
-    // Check for potential YAML bombs or excessively large content
-    if (yamlContent.length > 1024 * 100) { // 100KB limit
-        return {
-            valid: false,
-            errors: [{
-                path: '/',
-                message: 'YAML content exceeds maximum allowed size (100KB)',
-                code: 'YAML_SIZE_LIMIT_EXCEEDED',
-                severity: 'error',
-            }],
-            warnings: [],
-        };
-    }
-
-    // Parse YAML with security options
-    let parsed: unknown;
-    try {
-        parsed = parseYaml(yamlContent, {
-            // Disable dangerous features that could lead to injection
-            schema: 'core', // Use only safe schema
-            maxAliasCount: 100, // Prevent infinite loops from aliases
-        });
-    } catch (err) {
-        const yamlError = err as Error;
-        return {
-            valid: false,
-            errors: [{
-                path: '/',
-                message: `YAML parse error: ${yamlError.message}`,
-                code: 'YAML_PARSE_ERROR',
-                severity: 'error',
-            }],
-            warnings: [],
-        };
+    const { parsed, errors } = parseYamlWithLimits(yamlContent);
+    if (!parsed) {
+        return { valid: false, errors, warnings: [] };
     }
 
     // Additional check to prevent prototype pollution and other injection attacks
@@ -194,14 +201,38 @@ function isSafeObject(obj: unknown): boolean {
  * @returns Parsed VYPromptSpec or null if invalid
  */
 export function parseAndValidate(yamlContent: string): { spec: VYPromptSpec | null; result: ValidationResult } {
-    const result = validateSchema(yamlContent);
-
-    if (!result.valid) {
-        return { spec: null, result };
+    const { parsed, errors } = parseYamlWithLimits(yamlContent);
+    if (!parsed) {
+        return { spec: null, result: { valid: false, errors, warnings: [] } };
     }
 
-    const spec = parseYaml(yamlContent) as VYPromptSpec;
-    return { spec, result };
+    if (!isSafeObject(parsed)) {
+        return {
+            spec: null,
+            result: {
+                valid: false,
+                errors: [{
+                    path: '/',
+                    message: 'YAML contains unsafe constructs that could lead to injection',
+                    code: 'YAML_INJECTION_DETECTED',
+                    severity: 'error',
+                }],
+                warnings: [],
+            },
+        };
+    }
+
+    const validate = getValidator();
+    const valid = validate(parsed);
+    const schemaErrors = valid ? [] : formatAjvErrors(validate.errors);
+
+    const result: ValidationResult = {
+        valid: schemaErrors.length === 0,
+        errors: schemaErrors,
+        warnings: [],
+    };
+
+    return { spec: result.valid ? (parsed as VYPromptSpec) : null, result };
 }
 
 /**

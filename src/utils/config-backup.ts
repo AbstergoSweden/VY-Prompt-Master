@@ -108,11 +108,11 @@ function cleanupOldBackups(configPath: string, keepNumber: number): void {
     for (let i = keepNumber; i < backups.length; i++) {
       try {
         unlinkSync(backups[i].path);
-      } catch (e) {
+      } catch {
         // Ignore cleanup errors
       }
     }
-  } catch (error) {
+  } catch {
     // Ignore cleanup errors - it's not critical
   }
 }
@@ -283,7 +283,7 @@ export function listBackups(configPath: string): Array<{ path: string; date: Dat
         const timeDiff = b.date.getTime() - a.date.getTime();
         return timeDiff !== 0 ? timeDiff : (path.basename(b.path).localeCompare(path.basename(a.path)));
       });
-  } catch (error) {
+  } catch {
     return [];
   }
 }

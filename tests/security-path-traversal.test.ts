@@ -5,7 +5,7 @@
 
 import { describe, it, expect, beforeEach, afterEach } from 'vitest';
 import { validatePath } from '../src/utils/security-utils.js';
-import { mkdtempSync, rmdirSync, symlinkSync, mkdirSync, writeFileSync, unlinkSync, existsSync, realpathSync } from 'fs';
+import { mkdtempSync, rmSync, symlinkSync, mkdirSync, writeFileSync, unlinkSync, existsSync, realpathSync } from 'fs';
 import { join } from 'path';
 import * as os from 'os';
 
@@ -36,9 +36,9 @@ describe('Path Traversal Security Tests', () => {
                 unlinkSync(testFile);
             }
             if (tempDir && existsSync(tempDir)) {
-                rmdirSync(tempDir, { recursive: true });
+                rmSync(tempDir, { recursive: true, force: true });
             }
-        } catch (_e) {
+        } catch {
             // Ignore cleanup errors
         }
     });
@@ -112,7 +112,7 @@ describe('Path Traversal Security Tests', () => {
             } finally {
                 try {
                     unlinkSync(outsideFile);
-                } catch (e) {
+                } catch {
                     // Ignore cleanup errors
                 }
             }
@@ -146,8 +146,8 @@ describe('Path Traversal Security Tests', () => {
                 console.log('Symlink test skipped:', (e as Error).message);
             } finally {
                 try {
-                    rmdirSync(outsideDir, { recursive: true });
-                } catch (e) {
+                    rmSync(outsideDir, { recursive: true, force: true });
+                } catch {
                     // Ignore cleanup errors
                 }
             }
@@ -249,7 +249,7 @@ describe('Path Traversal Security Tests', () => {
                 currentPath = join(currentPath, part);
                 try {
                     mkdirSync(currentPath);
-                } catch (e) {
+                } catch {
                     // Ignore if already exists
                 }
             }

@@ -223,8 +223,22 @@ program
 
         // Try to parse as YAML
         try {
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            const parsed = parseYaml(yamlContent) as Record<string, any>;
+            if (yamlContent.length > appConfig.yamlSizeLimit) {
+                console.error(chalk.red(`❌ YAML too large (>${appConfig.yamlSizeLimit} bytes)`));
+                process.exit(1);
+            }
+
+            const parsedUnknown = parseYaml(yamlContent, {
+                schema: 'core',
+                maxAliasCount: 100,
+            });
+
+            if (!parsedUnknown || typeof parsedUnknown !== 'object') {
+                console.error(chalk.red('❌ YAML root must be an object'));
+                process.exit(1);
+            }
+
+            const parsed = parsedUnknown as Record<string, unknown>;
 
             // Check for required top-level keys
             const requiredKeys = ['identity', 'purpose', 'context', 'inputs', 'task', 'constraints', 'output_format', 'self_check'];
@@ -232,7 +246,11 @@ program
 
             if (missingKeys.length === 0) {
                 console.log(chalk.green('✅ Basic structure OK'));
-                const stepCount = parsed.task?.steps?.length ?? 0;
+                const task = parsed['task'];
+                const stepCount =
+                    task && typeof task === 'object' && Array.isArray((task as Record<string, unknown>)['steps'])
+                        ? ((task as Record<string, unknown>)['steps'] as unknown[]).length
+                        : 0;
                 console.log(chalk.gray(`   Steps: ${stepCount}`));
             } else {
                 console.error(chalk.red('❌ Missing required keys:'));
@@ -247,4 +265,4 @@ program
         }
     });
 
-program.parse();
+await program.parseAsync(process.argv);

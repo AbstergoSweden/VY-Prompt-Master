@@ -4,7 +4,7 @@
  */
 
 import { describe, it, expect, beforeEach, afterEach } from 'vitest';
-import { mkdtempSync, rmdirSync, writeFileSync, unlinkSync, existsSync } from 'fs';
+import { mkdtempSync, rmSync, writeFileSync, unlinkSync, existsSync } from 'fs';
 import { join } from 'path';
 import * as os from 'os';
 import {
@@ -26,9 +26,9 @@ describe('Config Backup and Recovery Tests', () => {
   afterEach(() => {
     try {
       if (existsSync(tempDir)) {
-        rmdirSync(tempDir, { recursive: true });
+        rmSync(tempDir, { recursive: true, force: true });
       }
-    } catch (e) {
+    } catch {
       // Ignore cleanup errors
     }
   });

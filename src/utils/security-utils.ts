@@ -1,9 +1,12 @@
 /**
- * Security utility functions for path validation and sanitization
+ * Security utility functions for path validation and sanitization.
+ *
+ * This module is used by the CLI to prevent path traversal and reduce the risk
+ * of local file read/write escaping the working directory.
  */
 
-import { resolve, normalize, isAbsolute, relative, sep } from 'path';
-import { realpathSync } from 'fs';
+import { resolve, normalize, isAbsolute, relative, sep, dirname } from 'path';
+import { realpathSync, existsSync } from 'fs';
 
 /**
  * Validates that a file path is within the allowed directory to prevent path traversal
@@ -36,7 +39,7 @@ export function validatePath(filePath: string, allowedBaseDir: string = process.
     }
 
     // Block UNC paths (\\server\share or //server/share)
-    if (/^\\\\[^\\/]|^\/\/[^\/]/.test(filePath)) {
+    if (/^\\\\[^\\/]|^\/\/[^/]/.test(filePath)) {
         throw new Error(`Path traversal detected: UNC paths not allowed`);
     }
 
@@ -53,30 +56,41 @@ export function validatePath(filePath: string, allowedBaseDir: string = process.
     let resolvedPath: string;
     try {
         resolvedPath = resolve(allowedBaseDir, filePath);
-    } catch (error) {
+    } catch {
         throw new Error(`Path traversal detected: invalid path resolution`);
     }
 
     // Normalize path to remove redundant separators and relative components
     const normalizedPath = normalize(resolvedPath);
 
-    // Resolve symlinks to get canonical path
-    let canonicalPath: string;
-    try {
-        canonicalPath = realpathSync(normalizedPath);
-    } catch (error) {
-        // If file doesn't exist yet, use the normalized path but validate against base dir
-        // Still need to check if it's attempting to escape
-        canonicalPath = normalizedPath;
-    }
-
     // Resolve the allowed base directory to canonical form
     let canonicalBaseDir: string;
     try {
         canonicalBaseDir = realpathSync(allowedBaseDir);
-    } catch (error) {
-        // If base doesn't exist, create it temporarily to verify
+    } catch {
         throw new Error(`Invalid base directory: ${allowedBaseDir}`);
+    }
+
+    // Resolve symlinks on the target path.
+    // If the target doesn't exist yet, canonicalize the nearest existing ancestor
+    // to prevent directory-symlink escape (TOCTOU) while still allowing new files
+    // under a real directory tree.
+    let canonicalPath: string;
+    if (existsSync(normalizedPath)) {
+        canonicalPath = realpathSync(normalizedPath);
+    } else {
+        let ancestor = dirname(normalizedPath);
+        let suffix = relative(ancestor, normalizedPath); // initially just the basename
+
+        // Walk up until we find an existing directory.
+        while (ancestor !== dirname(ancestor) && !existsSync(ancestor)) {
+            const parent = dirname(ancestor);
+            suffix = relative(parent, normalizedPath);
+            ancestor = parent;
+        }
+
+        const canonicalAncestor = realpathSync(ancestor);
+        canonicalPath = resolve(canonicalAncestor, suffix);
     }
 
     // Check if the path is within the allowed base directory
@@ -117,9 +131,9 @@ export function sanitizeInput(input: string): string {
     // Remove or replace dangerous characters that could be used for injection
     normalized = normalized
         // Remove null bytes
-        .replace(/\x00/g, '')
-        // Replace backticks (could be used for command injection)
-        .replace(/`/g, '\`')
+        .replaceAll('\0', '')
+        // Remove backticks (can be used to visually imply command execution)
+        .replaceAll('`', '')
         // Neutralize potential script tags
         .replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, '[REMOVED]')
         // Remove potential HTML tags

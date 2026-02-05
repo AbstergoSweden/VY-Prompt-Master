@@ -3,24 +3,30 @@
  * Tests for CLI commands end-to-end with various inputs
  */
 
-import { describe, it, expect, beforeEach, afterEach } from 'vitest';
-import { execSync } from 'child_process';
-import { writeFileSync } from 'fs';
+import { describe, it, expect, beforeAll, beforeEach, afterEach } from 'vitest';
+import { execFileSync } from 'child_process';
+import { mkdirSync, rmSync, writeFileSync } from 'fs';
 import { join } from 'path';
 
 describe('CLI Integration Tests', () => {
   const testDir = join(process.cwd(), 'tmp-test-dir');
   const testPromptFile = join(testDir, 'test-prompt.yaml');
+  const cliPath = join(process.cwd(), 'dist', 'cli', 'index.js');
+
+  beforeAll(() => {
+    // Build once so tests can run against the compiled CLI (avoids tsx IPC issues).
+    execFileSync('npm', ['run', 'build'], { encoding: 'utf-8' });
+  });
 
   beforeEach(() => {
     // Create a temporary directory for test files
-    execSync(`mkdir -p ${testDir}`);
+    mkdirSync(testDir, { recursive: true });
   });
 
   afterEach(() => {
     // Clean up test files
     try {
-      execSync(`rm -rf ${testDir}`);
+      rmSync(testDir, { recursive: true, force: true });
     } catch {
       // Ignore cleanup errors
     }
@@ -28,8 +34,7 @@ describe('CLI Integration Tests', () => {
 
   it('should run dry-run mode successfully', () => {
     // Test dry-run mode without calling AI APIs
-    const command = `cd ${process.cwd()} && npx tsx src/cli/index.ts generate --dry-run "Test task for dry run"`;
-    const result = execSync(command, { encoding: 'utf-8' });
+    const result = execFileSync('node', [cliPath, 'generate', '--dry-run', 'Test task for dry run'], { encoding: 'utf-8' });
     
     expect(result).toContain('Dry run mode');
     expect(result).toContain('Policy classification');
@@ -72,8 +77,7 @@ self_check:
     writeFileSync(testPromptFile, validPrompt);
 
     // Run validation command
-    const command = `cd ${process.cwd()} && npx tsx src/cli/index.ts validate ${testPromptFile}`;
-    const result = execSync(command, { encoding: 'utf-8' });
+    const result = execFileSync('node', [cliPath, 'validate', testPromptFile], { encoding: 'utf-8' });
 
     expect(result).toContain('Valid VY prompt specification');
   });
@@ -83,13 +87,14 @@ self_check:
 
     // Run validation command - should fail
     try {
-      const command = `cd ${process.cwd()} && npx tsx src/cli/index.ts validate ${nonExistentFile}`;
-      execSync(command, { encoding: 'utf-8' });
+      execFileSync('node', [cliPath, 'validate', nonExistentFile], { encoding: 'utf-8' });
       // If we reach here, the command didn't fail as expected
       expect.fail('Validation should have failed for non-existent file');
     } catch (error: any) {
       // The error object from execSync has different properties
-      expect(error.stdout || error.stderr).toContain('File not found');
+      const stdout = typeof error?.stdout === 'string' ? error.stdout : (error?.stdout?.toString?.() ?? '');
+      const stderr = typeof error?.stderr === 'string' ? error.stderr : (error?.stderr?.toString?.() ?? '');
+      expect(stdout + stderr).toContain('File not found');
     }
   });
 
@@ -130,8 +135,7 @@ self_check:
     writeFileSync(testPromptFile, validPrompt);
 
     // Run check command
-    const command = `cd ${process.cwd()} && npx tsx src/cli/index.ts check ${testPromptFile}`;
-    const result = execSync(command, { encoding: 'utf-8' });
+    const result = execFileSync('node', [cliPath, 'check', testPromptFile], { encoding: 'utf-8' });
     
     expect(result).toContain('Basic structure OK');
   });
@@ -141,13 +145,14 @@ self_check:
     const maliciousPath = '../../../etc/passwd'; // This should be blocked
 
     try {
-      const command = `cd ${process.cwd()} && npx tsx src/cli/index.ts validate ${maliciousPath}`;
-      execSync(command, { encoding: 'utf-8' });
+      execFileSync('node', [cliPath, 'validate', maliciousPath], { encoding: 'utf-8' });
       // If we reach here, path traversal wasn't prevented
       expect.fail('Path traversal should have been prevented');
     } catch (error: any) {
       // Check both stdout and stderr for the expected message
-      const output = error.stdout || error.stderr || error.message;
+      const stdout = typeof error?.stdout === 'string' ? error.stdout : (error?.stdout?.toString?.() ?? '');
+      const stderr = typeof error?.stderr === 'string' ? error.stderr : (error?.stderr?.toString?.() ?? '');
+      const output = stdout + stderr + (error?.message ?? '');
       expect(output).toContain('Path traversal');
     }
   });
