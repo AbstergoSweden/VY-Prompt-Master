@@ -57,8 +57,9 @@ dist/
 __MACOSX/
 .AppleDouble
 .LSOverride
-Icon[
-]
+# macOS Finder icon file is literally named "Icon\r" (with a carriage return).
+# Use a glob that matches it without embedding a raw CR in this file.
+Icon?
 
 # Thumbnails
 ._*
