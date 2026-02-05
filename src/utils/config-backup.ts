@@ -102,7 +102,7 @@ function cleanupOldBackups(configPath: string, keepNumber: number): void {
         path: resolve(dir, f),
         stat: statSync(resolve(dir, f)),
       }))
-      .sort((a, b) => b.stat.mtime.getTime() - a.stat.mtime.getTime());
+      .sort((a, b) => b.stat.mtimeMs - a.stat.mtimeMs);
 
     // Remove old backups beyond the keep limit
     for (let i = keepNumber; i < backups.length; i++) {
@@ -201,7 +201,7 @@ function recoverFromLatestBackup(configPath: string): RecoveryResult {
         path: resolve(dir, f),
         stat: statSync(resolve(dir, f)),
       }))
-      .sort((a, b) => b.stat.mtime.getTime() - a.stat.mtime.getTime());
+      .sort((a, b) => b.stat.mtimeMs - a.stat.mtimeMs);
 
     if (backups.length === 0) {
       return {
@@ -275,12 +275,13 @@ export function listBackups(configPath: string): Array<{ path: string; date: Dat
         const stat = statSync(path);
         return {
           path,
-          date: stat.mtime,
+          date: new Date(stat.mtimeMs),
           size: stat.size,
+          mtimeMs: stat.mtimeMs,
         };
       })
       .sort((a, b) => {
-        const timeDiff = b.date.getTime() - a.date.getTime();
+        const timeDiff = (b as { mtimeMs: number }).mtimeMs - (a as { mtimeMs: number }).mtimeMs;
         return timeDiff !== 0 ? timeDiff : (path.basename(b.path).localeCompare(path.basename(a.path)));
       });
   } catch {

@@ -11,7 +11,7 @@ import { join } from 'path';
 describe('CLI Integration Tests', () => {
   const testDir = join(process.cwd(), 'tmp-test-dir');
   const testPromptFile = join(testDir, 'test-prompt.yaml');
-  const cliPath = join(process.cwd(), 'dist', 'cli', 'index.js');
+  const cliPath = join(process.cwd(), 'dist', 'src', 'cli', 'index.js');
 
   beforeAll(() => {
     // Build once so tests can run against the compiled CLI (avoids tsx IPC issues).

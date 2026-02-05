@@ -28,9 +28,26 @@ const __dirname = dirname(__filename);
 
 /** Loads the VY prompt schema from the framework directory */
 function loadSchema(): object {
-    const schemaPath = join(__dirname, '../../framework/vy-prompt-schema.json');
-    const schemaContent = readFileSync(schemaPath, 'utf-8');
-    return JSON.parse(schemaContent);
+    const candidates = [
+        // Most common in development/CLI usage (repo root).
+        join(process.cwd(), 'framework/vy-prompt-schema.json'),
+        // Source layout (src/validator -> ../../framework).
+        join(__dirname, '../../framework/vy-prompt-schema.json'),
+        // Built layout (dist/src/validator -> ../../../../framework).
+        join(__dirname, '../../../../framework/vy-prompt-schema.json'),
+    ];
+
+    for (const schemaPath of candidates) {
+        try {
+            const schemaContent = readFileSync(schemaPath, 'utf-8');
+            return JSON.parse(schemaContent);
+        } catch {
+            // Try the next candidate (ENOENT or JSON parse errors for the wrong file path).
+            continue;
+        }
+    }
+
+    throw new Error('Could not locate framework/vy-prompt-schema.json (schema file not found)');
 }
 
 /** Converts ajv errors to ValidationError format */

@@ -7,6 +7,41 @@ on:
     branches: [main]
 
 jobs:
+  preflight:
+    runs-on: ubuntu-latest
+    name: Build, Test, Typecheck, Lint
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version-file: '.nvmrc'
+          cache: 'npm'
+
+      - name: Install Dependencies
+        run: npm ci
+
+      - name: Preflight
+        run: npm run preflight
+
+  gitleaks:
+    runs-on: ubuntu-latest
+    name: Secret Scan (gitleaks)
+
+    steps:
+      - name: Checkout (full history)
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Run gitleaks
+        uses: gitleaks/gitleaks-action@v2
+        with:
+          args: detect --redact --verbose
+
   validate:
     runs-on: ubuntu-latest
     name: Validate YAML and Schema
@@ -18,7 +53,8 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '20'
+          node-version-file: '.nvmrc'
+          cache: 'npm'
       
       - name: Install validation tools
         run: npm install -g ajv-cli js-yaml
@@ -64,7 +100,8 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '20'
+          node-version-file: '.nvmrc'
+          cache: 'npm'
       
       - name: Lint README
         uses: DavidAnson/markdownlint-cli2-action@v16

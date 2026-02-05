@@ -2,4 +2,4 @@ contact: 2-craze-headmen@icloud.com
 preferred_languages:
   - en
 policy: |
-  This repository follows best practices for security. Please report vulnerabilities via issues.
+  Please do NOT report security vulnerabilities via public issues. Use the email address in SECURITY.md or GitHub Security Advisories for private disclosure.

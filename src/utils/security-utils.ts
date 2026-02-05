@@ -8,6 +8,34 @@
 import { resolve, normalize, isAbsolute, relative, sep, dirname } from 'path';
 import { realpathSync, existsSync } from 'fs';
 
+function tryDecodeURIComponent(value: string): string {
+    try {
+        return decodeURIComponent(value);
+    } catch {
+        return value;
+    }
+}
+
+function wouldEscapeBaseDir(pathLike: string): boolean {
+    const unified = pathLike.replaceAll('\\', '/');
+
+    // Only reason about relative paths here. Absolute paths are handled later by canonical checks.
+    if (unified.startsWith('/')) return false;
+
+    const segments = unified.split('/');
+    let depth = 0;
+    for (const seg of segments) {
+        if (!seg || seg === '.') continue;
+        if (seg === '..') {
+            depth -= 1;
+            if (depth < 0) return true;
+            continue;
+        }
+        depth += 1;
+    }
+    return false;
+}
+
 /**
  * Validates that a file path is within the allowed directory to prevent path traversal
  * @param filePath The file path to validate
@@ -24,6 +52,25 @@ export function validatePath(filePath: string, allowedBaseDir: string = process.
     // Block null bytes
     if (filePath.includes('\0')) {
         throw new Error(`Path traversal detected: null bytes not allowed`);
+    }
+
+    // Defensive decoding for common traversal encodings (e.g., %2e%2e%2f).
+    // Decode a couple times to catch double-encoding without risking unbounded work.
+    let decoded = filePath;
+    for (let i = 0; i < 2; i++) {
+        const next = tryDecodeURIComponent(decoded);
+        if (next === decoded) break;
+        decoded = next;
+    }
+
+    // Block Windows drive-letter absolute paths (C:\..., D:/..., etc.).
+    if (/^[a-zA-Z]:[\\/]/.test(decoded)) {
+        throw new Error(`Path traversal detected: Windows drive paths not allowed`);
+    }
+
+    // Treat backslashes as separators for traversal detection, even on POSIX.
+    if (wouldEscapeBaseDir(decoded)) {
+        throw new Error(`Path traversal detected: ${filePath}. Access denied.`);
     }
 
     // Block Windows special files (CON, PRN, AUX, NUL, COM1-9, LPT1-9)

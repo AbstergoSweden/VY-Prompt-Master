@@ -3,14 +3,14 @@
   "version": "1.0.0",
   "description": "AI-powered VY prompt generation and validation framework",
   "type": "module",
-  "main": "dist/index.js",
+  "main": "dist/src/index.js",
   "bin": {
-    "vy-prompt": "dist/cli/index.js"
+    "vy-prompt": "dist/src/cli/index.js"
   },
   "scripts": {
     "build": "tsc",
     "dev": "tsx watch src/cli/index.ts",
-    "start": "node dist/cli/index.js",
+    "start": "node dist/src/cli/index.js",
     "test": "vitest run",
     "test:watch": "vitest",
     "test:coverage": "vitest run --coverage",

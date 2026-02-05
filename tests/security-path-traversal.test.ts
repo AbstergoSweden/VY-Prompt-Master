@@ -74,26 +74,27 @@ describe('Path Traversal Security Tests', () => {
         });
     });
 
-    describe('Advanced Path Traversal Edge Cases', () => {
-        it('should reject paths with redundant separators', () => {
-            expect(() => validatePath('config//..//test.yaml', tempDir)).toThrow('Path traversal detected');
-            expect(() => validatePath('config\\..\\test.yaml', tempDir)).toThrow('Path traversal detected');
-        });
+	    describe('Advanced Path Traversal Edge Cases', () => {
+	        it('should reject paths with redundant separators', () => {
+	            // Two ".." segments escape the base directory.
+	            expect(() => validatePath('config//..//..//test.yaml', tempDir)).toThrow('Path traversal detected');
+	            expect(() => validatePath('config\\..\\..\\test.yaml', tempDir)).toThrow('Path traversal detected');
+	        });
 
-        it('should reject path with mixed separators', () => {
-            expect(() => validatePath('config\\../test.yaml', tempDir)).toThrow('Path traversal detected');
-            expect(() => validatePath('config/..\\test.yaml', tempDir)).toThrow('Path traversal detected');
-        });
+	        it('should reject path with mixed separators', () => {
+	            expect(() => validatePath('config\\..\\..\\/test.yaml', tempDir)).toThrow('Path traversal detected');
+	            expect(() => validatePath('config/..\\..\\test.yaml', tempDir)).toThrow('Path traversal detected');
+	        });
 
-        it('should reject absolute path outside allowed base', () => {
-            expect(() => validatePath('/etc/passwd', tempDir)).toThrow('Path traversal detected');
-            expect(() => validatePath('C:\\Windows\\System32\\config', tempDir)).toThrow('Path traversal detected');
-        });
+	        it('should reject absolute path outside allowed base', () => {
+	            expect(() => validatePath('/etc/passwd', tempDir)).toThrow('Path traversal detected');
+	            expect(() => validatePath('C:\\Windows\\System32\\config', tempDir)).toThrow('Path traversal detected');
+	        });
 
-        it('should reject relative path that escapes base directory', () => {
-            expect(() => validatePath('../../../../../test.yaml', tempDir)).toThrow('Path traversal detected');
-        });
-    });
+	        it('should reject relative path that escapes base directory', () => {
+	            expect(() => validatePath('../../../../../test.yaml', tempDir)).toThrow('Path traversal detected');
+	        });
+	    });
 
     describe('Symlink Attack Prevention', () => {
         it('should reject symlinks pointing outside allowed base', () => {
@@ -236,7 +237,7 @@ describe('Path Traversal Security Tests', () => {
         });
     });
 
-    describe('Deep Nesting Edge Cases', () => {
+        describe('Deep Nesting Edge Cases', () => {
         it('should handle very deep but valid nested paths', () => {
             const deepPath = 'a/b/c/d/e/f/g/h/i/j/test.yaml';
             const fullPath = join(tempDir, deepPath);
@@ -262,7 +263,8 @@ describe('Path Traversal Security Tests', () => {
         });
 
         it('should reject deep paths that attempt to escape', () => {
-            const maliciousPath = 'a/b/c/../../../etc/passwd';
+            // Four ".." segments escape past the base directory.
+            const maliciousPath = 'a/b/c/../../../../etc/passwd';
             expect(() => validatePath(maliciousPath, tempDir)).toThrow('Path traversal detected');
         });
     });
